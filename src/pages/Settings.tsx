@@ -13,11 +13,11 @@ export interface SMTPSettings {
 
 const Settings: React.FC = () => {
   const [settings, setSettings] = useState<SMTPSettings>({
-    host: '',
+    host: 'smtp.hostinger.com',
     port: '465',
     user: '',
     pass: '',
-    fromName: '',
+    fromName: 'Leading Edge',
     fromEmail: ''
   });
   
@@ -26,13 +26,14 @@ const Settings: React.FC = () => {
   useEffect(() => {
     if ((window as any).electronAPI) {
       (window as any).electronAPI.getSettings().then((dbSettings: any) => {
-        if (dbSettings) {
+        if (dbSettings && dbSettings.host) {
+          // Only override defaults if user has already saved settings
           setSettings({
-            host: dbSettings.host || '',
+            host: dbSettings.host || 'smtp.hostinger.com',
             port: dbSettings.port || '465',
             user: dbSettings.username || '',
             pass: dbSettings.password || '',
-            fromName: dbSettings.from_name || '',
+            fromName: dbSettings.from_name || 'Leading Edge',
             fromEmail: dbSettings.from_email || ''
           });
         }
@@ -66,6 +67,29 @@ const Settings: React.FC = () => {
       <div className="mb-8 border-b border-slate-800 pb-5">
         <h2 className="text-3xl font-bold text-slate-100">SMTP Settings</h2>
         <p className="text-slate-400 mt-2">Configure the mail server credentials used to dispatch the campaigns.</p>
+      </div>
+
+      {/* Hostinger Quick Reference */}
+      <div className="mb-6 bg-blue-950/40 border border-blue-500/20 rounded-xl p-5">
+        <h3 className="text-sm font-semibold text-blue-300 mb-3">📡 Hostinger Email Server Reference</h3>
+        <div className="grid grid-cols-3 gap-3 text-xs font-mono">
+          <div className="bg-slate-900/60 rounded-lg p-3 border border-slate-800">
+            <div className="text-slate-500 mb-1">SMTP (Outgoing)</div>
+            <div className="text-blue-300 font-bold">smtp.hostinger.com</div>
+            <div className="text-slate-400 mt-1">Port: 465 · SSL</div>
+          </div>
+          <div className="bg-slate-900/60 rounded-lg p-3 border border-slate-800">
+            <div className="text-slate-500 mb-1">IMAP (Incoming)</div>
+            <div className="text-slate-400 font-bold">imap.hostinger.com</div>
+            <div className="text-slate-400 mt-1">Port: 993 · SSL</div>
+          </div>
+          <div className="bg-slate-900/60 rounded-lg p-3 border border-slate-800">
+            <div className="text-slate-500 mb-1">POP3 (Incoming)</div>
+            <div className="text-slate-400 font-bold">pop.hostinger.com</div>
+            <div className="text-slate-400 mt-1">Port: 995 · SSL</div>
+          </div>
+        </div>
+        <p className="text-xs text-blue-400/70 mt-3">This app only uses SMTP for sending. Enter your Hostinger email credentials below.</p>
       </div>
 
       <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8 backdrop-blur-sm">
