@@ -6,8 +6,9 @@ import Settings from './pages/Settings';
 import MailDesign from './pages/MailDesign';
 import MailHistory from './pages/MailHistory';
 import Contacts from './pages/Contacts';
+import Analytics from './pages/Analytics';
 
-export type PageView = 'dashboard' | 'campaign' | 'design' | 'contacts' | 'history' | 'settings';
+export type PageView = 'dashboard' | 'campaign' | 'design' | 'contacts' | 'history' | 'settings' | 'analytics';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<PageView>('dashboard');
@@ -21,6 +22,7 @@ const App: React.FC = () => {
         {currentPage === 'design'    && <MailDesign />}
         {currentPage === 'contacts'  && <Contacts />}
         {currentPage === 'history'   && <MailHistory />}
+        {currentPage === 'analytics' && <Analytics />}
         {currentPage === 'settings'  && <Settings />}
       </main>
     </div>

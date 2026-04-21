@@ -10,7 +10,7 @@ import {
   createCampaign, updateCampaignProgress, finishCampaign, addSendRecord,
   getAllCampaigns, getCampaignRecords,
   getAllContactLists, getContactListById, createContactList, deleteContactList,
-  getContactsByListId, insertContactsIntoList, getDashboardStats
+  getContactsByListId, insertContactsIntoList, getDashboardStats, addSingleContact
 } from './database';
 import { LOGO_BLACK_B64, LOGO_WHITE_B64 } from './logoData';
 
@@ -81,12 +81,23 @@ ipcMain.on('delete-design', (event, id) => deleteDesign(id));
 
 ipcMain.handle('get-history', () => getAllCampaigns());
 ipcMain.handle('get-history-records', (_, id) => getCampaignRecords(id));
-ipcMain.handle('get-dashboard-stats', () => getDashboardStats());
+ipcMain.handle('get-dashboard-stats', () => {
+  try {
+    return getDashboardStats()
+  } catch (err) {
+    console.error('get-dashboard-stats error', err);
+    return { totalSent:0, totalFailed:0, totalCampaigns:0, totalContacts:0, totalContactLists:0, totalDesigns:0, recentCampaigns:[] };
+  }
+});
 
 // ── CONTACT LISTS ─────────────────────────────────────────────
 ipcMain.handle('get-contact-lists', () => getAllContactLists());
 ipcMain.handle('get-contacts', (_, listId) => getContactsByListId(listId));
 ipcMain.handle('delete-contact-list', (_, id) => { deleteContactList(id); return true; });
+ipcMain.handle('add-contact', (_, data) => {
+  addSingleContact(data.listId, data.email, data.name);
+  return { success: true };
+});
 
 ipcMain.handle('import-contact-list', async (event, { name, description, csvPath }) => {
   const rows: any[] = [];
@@ -127,6 +138,20 @@ ipcMain.handle('start-campaign-from-list', async (event, { listId, designData, d
 
 ipcMain.on('stop-campaign', () => {
   isCampaignRunning = false;
+});
+
+ipcMain.handle('fetch-analytics', async () => {
+  // Use dynamically imported node-fetch or native fetch to grab logs from tracker
+  try {
+    // If native fetch isn't available in this node version, use https module. Native fetch is available in Node 18+ (Electron v24+)
+    const response = await fetch('https://leadingedge.com.bd/tracker.php?action=stats');
+    if (!response.ok) throw new Error('Network response was not ok');
+    const data = await response.json();
+    return data;
+  } catch (err: any) {
+    console.error('fetch-analytics error:', err);
+    return { success: false, error: err.message };
+  }
 });
 
 // ── EMAIL TEMPLATE BUILDER ───────────────────────────────────────────────────
@@ -343,11 +368,15 @@ ipcMain.on('start-campaign', async (event, { csvPath, contactListId, designId, d
 
     try {
       if (isCampaignRunning) {
+        // Inject tracking pixel for this specific user
+        const trackingPixel = `<img src="https://leadingedge.com.bd/tracker.php?c=${campaignId}&e=${encodeURIComponent(targetEmail)}" width="1" height="1" alt="" style="display:none;" />`;
+        const personalizedHtml = htmlTemplate.replace('</body>', `${trackingPixel}\n</body>`);
+
         await transporter.sendMail({
           from: `"${currentSettings.from_name}" <${currentSettings.from_email || currentSettings.username}>`,
           to: targetEmail,
           subject: campaignTargetSubject,
-          html: htmlTemplate, 
+          html: personalizedHtml, 
         });
         sent++;
         addSendRecord({ campaign_id: campaignId, recipient_email: targetEmail, status: 'sent' });

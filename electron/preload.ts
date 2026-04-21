@@ -20,12 +20,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Dashboard
   getDashboardStats: () => ipcRenderer.invoke('get-dashboard-stats'),
+  fetchAnalytics: () => ipcRenderer.invoke('fetch-analytics'),
 
   // Contact Lists
   getContactLists: () => ipcRenderer.invoke('get-contact-lists'),
   getContacts: (listId: number) => ipcRenderer.invoke('get-contacts', listId),
   importContactList: (payload: any) => ipcRenderer.invoke('import-contact-list', payload),
   deleteContactList: (id: number) => ipcRenderer.invoke('delete-contact-list', id),
+  addContact: (data: any) => ipcRenderer.invoke('add-contact', data),
 
   // Campaign
   startCampaign: (payload: any) => ipcRenderer.send('start-campaign', payload),

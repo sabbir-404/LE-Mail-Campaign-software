@@ -241,6 +241,12 @@ export function insertContactsIntoList(listId: number, contacts: { email: string
   db.prepare('UPDATE contact_lists SET contact_count = ? WHERE id = ?').run(count, listId);
 }
 
+export function addSingleContact(listId: number, email: string, name: string) {
+  db.prepare('INSERT OR IGNORE INTO contacts (list_id, email, name, extra_data) VALUES (?, ?, ?, ?)').run(listId, email, name, '{}');
+  const count = (db.prepare('SELECT COUNT(*) as c FROM contacts WHERE list_id = ?').get(listId) as any).c;
+  db.prepare('UPDATE contact_lists SET contact_count = ? WHERE id = ?').run(count, listId);
+}
+
 // ── DASHBOARD STATS ────────────────────────────────────────────
 export function getDashboardStats() {
   const totalSent = (db.prepare(`SELECT COALESCE(SUM(sent_count), 0) AS total FROM campaign_history`).get() as any).total;

@@ -13,6 +13,12 @@ const Contacts: React.FC = () => {
   const [importStatus, setImportStatus] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Single contact state
+  const [showAddContact, setShowAddContact] = useState(false);
+  const [newContactEmail, setNewContactEmail] = useState('');
+  const [newContactName, setNewContactName] = useState('');
+  const [addContactStatus, setAddContactStatus] = useState('');
+
   const api = () => (window as any).electronAPI;
 
   const loadLists = () => {
@@ -48,6 +54,19 @@ const Contacts: React.FC = () => {
     } else {
       setImportStatus(`Error: ${result?.error}`);
     }
+  };
+
+  const handleAddContact = async () => {
+    if (!newContactEmail.trim() || !selectedList) {
+      setAddContactStatus('Email is required.');
+      return;
+    }
+    setAddContactStatus('Adding...');
+    await api()?.addContact({ listId: selectedList.id, email: newContactEmail.trim(), name: newContactName.trim() });
+    setAddContactStatus('✓ Contact added');
+    // Reload contacts for this list
+    handleViewList(selectedList);
+    setTimeout(() => { setShowAddContact(false); setAddContactStatus(''); setNewContactEmail(''); setNewContactName(''); }, 1500);
   };
 
   const filtered = contacts.filter(c =>
@@ -133,13 +152,21 @@ const Contacts: React.FC = () => {
                   <span className="font-semibold text-stone-800">{selectedList.name}</span>
                   <span className="ml-2 text-xs text-stone-500">{selectedList.contact_count} contacts</span>
                 </div>
-                <input
-                  type="text"
-                  placeholder="Search emails..."
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  className="bg-white border border-stone-200 rounded-lg px-3 py-1.5 text-sm text-stone-800 focus:outline-none focus:ring-1 focus:ring-orange-500 w-48 shadow-sm placeholder:text-stone-400"
-                />
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowAddContact(true)}
+                    className="text-xs flex items-center gap-1 text-orange-600 font-medium hover:text-orange-700 bg-orange-50 px-2.5 py-1.5 rounded-lg border border-orange-200"
+                  >
+                    <Plus size={14} /> Add Contact
+                  </button>
+                  <input
+                    type="text"
+                    placeholder="Search emails..."
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    className="bg-white border border-stone-200 rounded-lg px-3 py-1.5 text-sm text-stone-800 focus:outline-none focus:ring-1 focus:ring-orange-500 w-48 shadow-sm placeholder:text-stone-400"
+                  />
+                </div>
               </div>
               <div className="flex-1 overflow-y-auto">
                 <table className="w-full text-sm text-left">
@@ -172,6 +199,54 @@ const Contacts: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Single Contact Modal */}
+      {showAddContact && (
+        <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white border border-stone-200 rounded-2xl p-8 w-[400px] shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-stone-900">Add New Contact</h3>
+              <button onClick={() => setShowAddContact(false)} className="text-stone-400 hover:text-stone-600"><X size={20} /></button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm text-stone-600 font-medium mb-1.5 block">Email Address *</label>
+                <input
+                  type="email"
+                  value={newContactEmail}
+                  onChange={e => setNewContactEmail(e.target.value)}
+                  className="w-full bg-white border border-stone-300 shadow-sm rounded-lg px-4 py-2.5 text-stone-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-stone-600 font-medium mb-1.5 block">Name (Optional)</label>
+                <input
+                  type="text"
+                  value={newContactName}
+                  onChange={e => setNewContactName(e.target.value)}
+                  className="w-full bg-white border border-stone-300 shadow-sm rounded-lg px-4 py-2.5 text-stone-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                />
+              </div>
+
+              {addContactStatus && (
+                <div className={clsx('text-sm px-4 py-2 rounded-lg border font-medium', addContactStatus.startsWith('✓') ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-stone-700 bg-stone-50 border-stone-200')}>
+                  {addContactStatus}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4">
+                <button onClick={() => setShowAddContact(false)} className="flex-1 py-2.5 border border-stone-300 text-stone-600 font-medium rounded-lg hover:bg-stone-50 transition-colors">
+                  Cancel
+                </button>
+                <button onClick={handleAddContact} className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg shadow-sm transition-colors">
+                  Add Contact
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Import Modal */}
       {showImport && (

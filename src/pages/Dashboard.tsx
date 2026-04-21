@@ -25,7 +25,12 @@ const Dashboard: React.FC<DashboardProps> = ({ setCurrentPage }) => {
 
   const loadStats = () => {
     if ((window as any).electronAPI) {
-      (window as any).electronAPI.getDashboardStats().then((res: any) => setStats(res));
+      (window as any).electronAPI.getDashboardStats()
+        .then((res: any) => setStats(res))
+        .catch((err: any) => {
+          console.error('Failed to load dashboard:', err);
+          setStats({ totalSent:0, totalFailed:0, totalCampaigns:0, totalContacts:0, totalContactLists:0, totalDesigns:0, recentCampaigns:[] });
+        });
     }
   };
 

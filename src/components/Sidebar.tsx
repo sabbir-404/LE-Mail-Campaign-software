@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  LayoutDashboard, Mail, PenTool, Users, Database, Settings as SettingsIcon
+  LayoutDashboard, Mail, PenTool, Users, Database, Settings as SettingsIcon, LineChart
 } from 'lucide-react';
 import { PageView } from '../App';
 import clsx from 'clsx';
@@ -24,6 +24,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'design',    label: 'Mail Design',   icon: <PenTool size={18} /> },
   { id: 'contacts',  label: 'Contacts',      icon: <Users size={18} /> },
   { id: 'history',   label: 'History',       icon: <Database size={18} /> },
+  { id: 'analytics', label: 'Analytics',     icon: <LineChart size={18} /> },
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {

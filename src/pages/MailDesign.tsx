@@ -67,6 +67,7 @@ const MailDesign: React.FC = () => {
   const [designs, setDesigns] = useState<any[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
 
   const [formData, setFormData] = useState({
     name: 'New Design',
@@ -181,6 +182,22 @@ const MailDesign: React.FC = () => {
             <h2 className="text-lg font-bold text-stone-900">{editingId ? 'Edit Design' : 'New Design'}</h2>
           </div>
           <div className="flex items-center gap-2">
+            {showPreview && (
+              <div className="flex items-center bg-stone-100 p-1 rounded-lg border border-stone-200 mr-2">
+                <button
+                  onClick={() => setPreviewMode('desktop')}
+                  className={clsx('px-2.5 py-1 text-xs rounded font-medium transition-colors', previewMode === 'desktop' ? 'bg-white shadow-sm text-stone-800' : 'text-stone-500 hover:text-stone-700')}
+                >
+                  Desktop
+                </button>
+                <button
+                  onClick={() => setPreviewMode('mobile')}
+                  className={clsx('px-2.5 py-1 text-xs rounded font-medium transition-colors', previewMode === 'mobile' ? 'bg-white shadow-sm text-stone-800' : 'text-stone-500 hover:text-stone-700')}
+                >
+                  Mobile
+                </button>
+              </div>
+            )}
             <button
               onClick={() => setShowPreview(p => !p)}
               className={clsx(
@@ -252,14 +269,19 @@ const MailDesign: React.FC = () => {
         </div>
 
         {/* Editor / Preview */}
-        <div className="flex-1 min-h-0 relative bg-stone-50">
+        <div className="flex-1 min-h-0 relative bg-stone-100 flex items-center justify-center p-0">
           {showPreview ? (
-            <iframe
-              srcDoc={buildPreviewHtmlLocal()}
-              className="w-full h-full border-0"
-              sandbox="allow-same-origin"
-              title="Email Preview"
-            />
+            <div className={clsx(
+              "h-full w-full transition-all duration-300 ease-in-out bg-white overflow-hidden shadow-xl", 
+              previewMode === 'mobile' ? 'max-w-[375px] max-h-[812px] rounded-[36px] my-6 border-[12px] border-stone-800 ring-1 ring-stone-200/50 relative before:content-[""] before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:w-32 before:h-6 before:bg-stone-800 before:rounded-b-xl' : 'w-full h-full border-0'
+            )}>
+              <iframe
+                srcDoc={buildPreviewHtmlLocal()}
+                className="w-full h-full border-0 bg-white"
+                sandbox="allow-same-origin"
+                title="Email Preview"
+              />
+            </div>
           ) : (
             <textarea
               name="body_html"
