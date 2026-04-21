@@ -12,7 +12,8 @@ interface CampaignStatus {
 
 const Campaign: React.FC = () => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [htmlFile, setHtmlFile] = useState<File | null>(null);
+  const [designs, setDesigns] = useState<any[]>([]);
+  const [selectedDesignId, setSelectedDesignId] = useState<string>('');
   const [delay, setDelay] = useState<number>(3); // seconds
 
   const [status, setStatus] = useState<CampaignStatus>({
@@ -29,6 +30,11 @@ const Campaign: React.FC = () => {
   useEffect(() => {
     if ((window as any).electronAPI) {
       const api = (window as any).electronAPI;
+      api.getDesigns().then((res: any) => {
+        setDesigns(res);
+        if (res.length > 0) setSelectedDesignId(res[0].id.toString());
+      });
+      
       api.onCampaignInit(({ total }: any) => {
         setStatus(prev => ({ ...prev, total }));
       });
@@ -52,23 +58,27 @@ const Campaign: React.FC = () => {
   }, [logs]);
 
   const handleStart = () => {
-    if (!csvFile || !htmlFile) {
-      addLog('Error: Please select both a CSV list and an HTML template.', 'error');
+    if (!csvFile || !selectedDesignId) {
+      addLog('Error: Please select both a CSV list and a Mail Design.', 'error');
       return;
     }
+
+    const selectedDesign = designs.find(d => d.id.toString() === selectedDesignId);
+    if (!selectedDesign) return;
 
     setStatus({ ...status, isRunning: true, sent: 0, failed: 0, currentEmail: 'Initializing...' });
     addLog('Starting campaign sequence...', 'info');
 
-    // MOCK START FOR NOW until IPC is hooked up
     if ((window as any).electronAPI) {
       (window as any).electronAPI.startCampaign({
         csvPath: (csvFile as any).path,
-        htmlPath: (htmlFile as any).path,
-        delay
+        designId: selectedDesign.id,
+        designData: selectedDesign,
+        delay,
+        subject: selectedDesign.subject
       });
     } else {
-      addLog('Electron API not found, running mock.', 'error');
+      addLog('Electron API not found.', 'error');
     }
   };
 
@@ -136,15 +146,44 @@ const Campaign: React.FC = () => {
           </label>
         </div>
 
-        {/* HTML Upload */}
-        <div className={clsx("border-2 border-dashed rounded-xl p-6 transition-colors flex flex-col items-center justify-center text-center", htmlFile ? "border-emerald-500/50 bg-emerald-500/5" : "border-slate-700 bg-slate-800/50 hover:border-indigo-500/50 hover:bg-slate-800")}>
-          <FileCode2 className={clsx("mb-3", htmlFile ? "text-emerald-400" : "text-slate-400")} size={40} />
-          <h3 className="font-medium text-slate-200 mb-1">{htmlFile ? htmlFile.name : 'Email Template (HTML)'}</h3>
-          <p className="text-sm text-slate-500 mb-4">{htmlFile ? 'Design locked' : 'Upload your promotional layout'}</p>
-          <label className="cursor-pointer bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-md text-sm transition-colors">
-            Browse File
-            <input type="file" accept=".html,.htm" className="hidden" onChange={e => setHtmlFile(e.target.files?.[0] || null)} />
-          </label>
+        {/* HTML Upload swapped for Design Selector */}
+        <div className={clsx("border border-slate-700 rounded-xl p-6 transition-colors flex flex-col justify-center", selectedDesignId ? "bg-slate-800/80" : "bg-slate-800/50")}>
+          <div className="flex items-center gap-3 mb-4 text-slate-200 font-medium">
+            <FileCode2 className="text-indigo-400" size={24} />
+            <span>Select Mail Design Layout</span>
+          </div>
+          
+          {designs.length === 0 ? (
+            <div className="text-sm text-slate-500 italic">No designs found. Please create one in the Mail Design tab first.</div>
+          ) : (
+            <div className="space-y-3">
+              <select 
+                value={selectedDesignId} 
+                onChange={e => setSelectedDesignId(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              >
+                {designs.map(d => (
+                  <option key={d.id} value={d.id}>{d.name} {d.subject ? `(${d.subject})` : ''}</option>
+                ))}
+              </select>
+              
+              {selectedDesignId && (
+                <div className="text-xs text-slate-400 p-3 bg-slate-900/50 rounded-lg border border-slate-800">
+                  {(() => {
+                    const d = designs.find(x => x.id.toString() === selectedDesignId);
+                    if (!d) return null;
+                    return (
+                      <>
+                        <div className="mb-1"><span className="text-slate-500">Subject:</span> {d.subject || '(None)'}</div>
+                        <div><span className="text-slate-500">Includes Header:</span> {d.use_header ? 'Yes' : 'No'}</div>
+                        <div><span className="text-slate-500">Includes Footer:</span> {d.use_footer ? 'Yes' : 'No'}</div>
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, Settings as SettingsIcon } from 'lucide-react';
+import { Mail, Settings as SettingsIcon, PenTool, Database } from 'lucide-react';
 import { PageView } from '../App';
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -34,6 +34,36 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
         >
           <Mail size={18} />
           Campaign
+        </button>
+
+        <button
+          onClick={() => setCurrentPage('design')}
+          className={twMerge(
+            clsx(
+              "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
+              currentPage === 'design' 
+                ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/30" 
+                : "text-slate-400 hover:bg-slate-800 hover:text-slate-200 border border-transparent"
+            )
+          )}
+        >
+          <PenTool size={18} />
+          Mail Design
+        </button>
+
+        <button
+          onClick={() => setCurrentPage('history')}
+          className={twMerge(
+            clsx(
+              "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
+              currentPage === 'history' 
+                ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/30" 
+                : "text-slate-400 hover:bg-slate-800 hover:text-slate-200 border border-transparent"
+            )
+          )}
+        >
+          <Database size={18} />
+          History
         </button>
 
         <button

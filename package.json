@@ -6,6 +6,7 @@
   "author": "Leading Edge",
   "license": "ISC",
   "scripts": {
+    "postinstall": "electron-rebuild -f -w better-sqlite3",
     "dev": "concurrently -k \"vite\" \"wait-on tcp:5173 && tsc -p electron && electron .\"",
     "build": "vite build && tsc -p electron && electron-builder",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -19,7 +20,8 @@
     },
     "files": [
       "dist/**/*",
-      "dist-electron/**/*"
+      "dist-electron/**/*",
+      "node_modules/better-sqlite3/**/*"
     ],
     "win": {
       "target": [
@@ -70,6 +72,7 @@
     "concurrently": "^8.2.2",
     "electron": "^30.0.0",
     "electron-builder": "^24.13.3",
+    "electron-rebuild": "^3.2.9",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.4.5",

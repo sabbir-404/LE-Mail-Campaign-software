@@ -69,6 +69,29 @@ export function initDatabase() {
   // Ensure there is always one settings row
   db.exec(`INSERT OR IGNORE INTO smtp_settings (id) VALUES (1);`);
 
+  // Contact lists table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS contact_lists (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      contact_count INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+
+  // Contacts table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS contacts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      list_id INTEGER NOT NULL,
+      email TEXT NOT NULL,
+      name TEXT DEFAULT '',
+      extra_data TEXT DEFAULT '',
+      FOREIGN KEY (list_id) REFERENCES contact_lists(id) ON DELETE CASCADE
+    );
+  `);
+
   console.log('Database initialized at:', dbPath);
   return db;
 }
@@ -170,4 +193,59 @@ export function getAllCampaigns() {
 
 export function getCampaignRecords(campaign_id: number) {
   return db.prepare('SELECT * FROM send_records WHERE campaign_id = ? ORDER BY sent_at DESC').all(campaign_id);
+}
+
+// ── CONTACT LISTS ─────────────────────────────────────────────
+export function getAllContactLists() {
+  return db.prepare('SELECT * FROM contact_lists ORDER BY created_at DESC').all();
+}
+
+export function getContactListById(id: number) {
+  return db.prepare('SELECT * FROM contact_lists WHERE id = ?').get(id);
+}
+
+export function createContactList(name: string, description: string) {
+  const result = db.prepare(
+    `INSERT INTO contact_lists (name, description) VALUES (?, ?)`
+  ).run(name, description);
+  return result.lastInsertRowid as number;
+}
+
+export function deleteContactList(id: number) {
+  db.prepare('DELETE FROM contacts WHERE list_id = ?').run(id);
+  db.prepare('DELETE FROM contact_lists WHERE id = ?').run(id);
+}
+
+export function getContactsByListId(listId: number) {
+  return db.prepare('SELECT * FROM contacts WHERE list_id = ?').all(listId);
+}
+
+export function insertContactsIntoList(listId: number, contacts: { email: string; name: string; extra_data: string }[]) {
+  const insert = db.prepare(
+    `INSERT OR IGNORE INTO contacts (list_id, email, name, extra_data) VALUES (?, ?, ?, ?)`
+  );
+  const insertMany = db.transaction((rows: typeof contacts) => {
+    for (const row of rows) {
+      insert.run(listId, row.email, row.name, row.extra_data);
+    }
+  });
+  insertMany(contacts);
+  // Update count
+  const count = (db.prepare('SELECT COUNT(*) as c FROM contacts WHERE list_id = ?').get(listId) as any).c;
+  db.prepare('UPDATE contact_lists SET contact_count = ? WHERE id = ?').run(count, listId);
+}
+
+// ── DASHBOARD STATS ────────────────────────────────────────────
+export function getDashboardStats() {
+  const totalSent = (db.prepare(`SELECT COALESCE(SUM(sent_count), 0) AS total FROM campaign_history`).get() as any).total;
+  const totalFailed = (db.prepare(`SELECT COALESCE(SUM(failed_count), 0) AS total FROM campaign_history`).get() as any).total;
+  const totalCampaigns = (db.prepare(`SELECT COUNT(*) AS total FROM campaign_history`).get() as any).total;
+  const totalContacts = (db.prepare(`SELECT COUNT(*) AS total FROM contacts`).get() as any).total;
+  const totalContactLists = (db.prepare(`SELECT COUNT(*) AS total FROM contact_lists`).get() as any).total;
+  const totalDesigns = (db.prepare(`SELECT COUNT(*) AS total FROM mail_designs`).get() as any).total;
+  const recentCampaigns = db.prepare(
+    `SELECT * FROM campaign_history ORDER BY started_at DESC LIMIT 5`
+  ).all();
+
+  return { totalSent, totalFailed, totalCampaigns, totalContacts, totalContactLists, totalDesigns, recentCampaigns };
 }

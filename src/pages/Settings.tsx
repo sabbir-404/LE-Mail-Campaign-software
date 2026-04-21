@@ -24,10 +24,19 @@ const Settings: React.FC = () => {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    // Load from local storage for now, eventually persist to config
-    const stored = localStorage.getItem('le_smtp_settings');
-    if (stored) {
-      setSettings(JSON.parse(stored));
+    if ((window as any).electronAPI) {
+      (window as any).electronAPI.getSettings().then((dbSettings: any) => {
+        if (dbSettings) {
+          setSettings({
+            host: dbSettings.host || '',
+            port: dbSettings.port || '465',
+            user: dbSettings.username || '',
+            pass: dbSettings.password || '',
+            fromName: dbSettings.from_name || '',
+            fromEmail: dbSettings.from_email || ''
+          });
+        }
+      });
     }
   }, []);
 
@@ -38,10 +47,15 @@ const Settings: React.FC = () => {
   };
 
   const handleSave = () => {
-    localStorage.setItem('le_smtp_settings', JSON.stringify(settings));
-    // Send to main process via IPC so the backend can use them
     if ((window as any).electronAPI) {
-      (window as any).electronAPI.saveSettings(settings);
+      (window as any).electronAPI.saveSettings({
+        host: settings.host,
+        port: settings.port,
+        username: settings.user,
+        password: settings.pass,
+        fromName: settings.fromName,
+        fromEmail: settings.fromEmail
+      });
     }
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
