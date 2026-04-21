@@ -7,26 +7,35 @@
   "license": "ISC",
   "scripts": {
     "postinstall": "electron-rebuild -f -w better-sqlite3",
-    "dev": "concurrently -k \"vite --port 5173\" \"wait-on tcp:5173 && tsc -p electron && VITE_PORT=5173 electron .\"",
+    "rebuild-native": "npx @electron/rebuild -f -w better-sqlite3",
+    "dev": "concurrently -k \"vite --port 5173\" \"wait-on tcp:5173 && tsc -p electron && cross-env VITE_PORT=5173 electron .\"",
     "build": "vite build && tsc -p electron && electron-builder",
+    "build:win": "vite build && tsc -p electron && electron-builder --win",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
   "build": {
     "appId": "com.leadingedge.mailcampaign",
     "productName": "LE Mail Campaign",
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/better-sqlite3/**/*"
+    ],
     "directories": {
       "output": "release/${version}"
     },
     "files": [
       "dist/**/*",
-      "dist-electron/**/*",
-      "node_modules/better-sqlite3/**/*"
+      "dist-electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "node_modules/better-sqlite3/build/Release/better_sqlite3.node",
+        "to": "."
+      }
     ],
     "win": {
-      "target": [
-        "nsis"
-      ],
+      "target": ["nsis"],
       "icon": "public/icon.ico"
     },
     "nsis": {
@@ -36,10 +45,8 @@
       "deleteAppDataOnUninstall": false
     },
     "mac": {
-      "target": [
-        "dmg"
-      ],
-      "icon": "public/icon.ico"
+      "target": ["dmg"],
+      "icon": "public/icon.png"
     },
     "publish": [
       {
@@ -62,6 +69,7 @@
     "tailwind-merge": "^2.2.2"
   },
   "devDependencies": {
+    "@electron/rebuild": "^4.0.3",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.12.7",
     "@types/nodemailer": "^8.0.0",
@@ -70,9 +78,9 @@
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.19",
     "concurrently": "^8.2.2",
+    "cross-env": "^10.1.0",
     "electron": "^30.0.0",
     "electron-builder": "^24.13.3",
-    "electron-rebuild": "^3.2.9",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.4.5",
