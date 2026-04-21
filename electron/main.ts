@@ -10,7 +10,8 @@ import {
   createCampaign, updateCampaignProgress, finishCampaign, addSendRecord,
   getAllCampaigns, getCampaignRecords,
   getAllContactLists, getContactListById, createContactList, deleteContactList,
-  getContactsByListId, insertContactsIntoList, getDashboardStats, addSingleContact
+  getContactsByListId, insertContactsIntoList, getDashboardStats, addSingleContact,
+  updateContact, deleteContact
 } from './database';
 import { LOGO_BLACK_B64, LOGO_WHITE_B64 } from './logoData';
 
@@ -97,6 +98,18 @@ ipcMain.handle('delete-contact-list', (_, id) => { deleteContactList(id); return
 ipcMain.handle('add-contact', (_, data) => {
   addSingleContact(data.listId, data.email, data.name);
   return { success: true };
+});
+ipcMain.handle('update-contact', (_, data) => {
+  updateContact(data.id, data.email, data.name);
+  return { success: true };
+});
+ipcMain.handle('delete-contact', (_, data) => {
+  deleteContact(data.id, data.listId);
+  return { success: true };
+});
+ipcMain.handle('create-blank-list', (_, data) => {
+  const id = createContactList(data.name, data.description);
+  return { success: true, listId: id };
 });
 
 ipcMain.handle('import-contact-list', async (event, { name, description, csvPath }) => {

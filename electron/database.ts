@@ -241,10 +241,23 @@ export function insertContactsIntoList(listId: number, contacts: { email: string
   db.prepare('UPDATE contact_lists SET contact_count = ? WHERE id = ?').run(count, listId);
 }
 
-export function addSingleContact(listId: number, email: string, name: string) {
-  db.prepare('INSERT OR IGNORE INTO contacts (list_id, email, name, extra_data) VALUES (?, ?, ?, ?)').run(listId, email, name, '{}');
+export function updateContactCount(listId: number) {
   const count = (db.prepare('SELECT COUNT(*) as c FROM contacts WHERE list_id = ?').get(listId) as any).c;
   db.prepare('UPDATE contact_lists SET contact_count = ? WHERE id = ?').run(count, listId);
+}
+
+export function addSingleContact(listId: number, email: string, name: string) {
+  db.prepare('INSERT OR IGNORE INTO contacts (list_id, email, name, extra_data) VALUES (?, ?, ?, ?)').run(listId, email, name, '{}');
+  updateContactCount(listId);
+}
+
+export function updateContact(id: number, email: string, name: string) {
+  db.prepare('UPDATE contacts SET email = ?, name = ? WHERE id = ?').run(email, name, id);
+}
+
+export function deleteContact(id: number, listId: number) {
+  db.prepare('DELETE FROM contacts WHERE id = ?').run(id);
+  updateContactCount(listId);
 }
 
 // ── DASHBOARD STATS ────────────────────────────────────────────

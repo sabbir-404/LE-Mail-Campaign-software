@@ -28,6 +28,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   importContactList: (payload: any) => ipcRenderer.invoke('import-contact-list', payload),
   deleteContactList: (id: number) => ipcRenderer.invoke('delete-contact-list', id),
   addContact: (data: any) => ipcRenderer.invoke('add-contact', data),
+  updateContact: (data: any) => ipcRenderer.invoke('update-contact', data),
+  deleteContact: (data: any) => ipcRenderer.invoke('delete-contact', data),
+  createBlankList: (data: any) => ipcRenderer.invoke('create-blank-list', data),
 
   // Campaign
   startCampaign: (payload: any) => ipcRenderer.send('start-campaign', payload),

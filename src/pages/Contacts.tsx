@@ -14,10 +14,20 @@ const Contacts: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Single contact state
+  // Single contact state & Editing
   const [showAddContact, setShowAddContact] = useState(false);
   const [newContactEmail, setNewContactEmail] = useState('');
   const [newContactName, setNewContactName] = useState('');
   const [addContactStatus, setAddContactStatus] = useState('');
+  
+  const [editingContact, setEditingContact] = useState<any>(null);
+  const [editEmail, setEditEmail] = useState('');
+  const [editName, setEditName] = useState('');
+
+  // Blank list state
+  const [showNewList, setShowNewList] = useState(false);
+  const [listName, setListName] = useState('');
+  const [listDesc, setListDesc] = useState('');
 
   const api = () => (window as any).electronAPI;
 
@@ -56,17 +66,55 @@ const Contacts: React.FC = () => {
     }
   };
 
+  const [selectedDropdownListId, setSelectedDropdownListId] = useState<number | ''>('');
+
   const handleAddContact = async () => {
-    if (!newContactEmail.trim() || !selectedList) {
-      setAddContactStatus('Email is required.');
+    const listIdToUse = selectedList ? selectedList.id : selectedDropdownListId;
+    if (!newContactEmail.trim() || !listIdToUse) {
+      setAddContactStatus('Email and a target List are required.');
       return;
     }
     setAddContactStatus('Adding...');
-    await api()?.addContact({ listId: selectedList.id, email: newContactEmail.trim(), name: newContactName.trim() });
+    await api()?.addContact({ listId: listIdToUse, email: newContactEmail.trim(), name: newContactName.trim() });
     setAddContactStatus('✓ Contact added');
-    // Reload contacts for this list
-    handleViewList(selectedList);
+    
+    // Reload contacts if the target list is currently being viewed
+    if (selectedList?.id === listIdToUse) {
+      handleViewList(selectedList);
+    }
+    loadLists(); // Refresh counts on the left panel
     setTimeout(() => { setShowAddContact(false); setAddContactStatus(''); setNewContactEmail(''); setNewContactName(''); }, 1500);
+  };
+
+  const handleCreateList = async () => {
+    if (!listName.trim()) return;
+    const res = await api()?.createBlankList({ name: listName, description: listDesc });
+    if (res?.success) {
+      loadLists();
+      setShowNewList(false);
+      setListName('');
+      setListDesc('');
+    }
+  };
+
+  const startEditContact = (c: any) => {
+    setEditingContact(c);
+    setEditEmail(c.email);
+    setEditName(c.name || '');
+  };
+
+  const handleSaveContactEdit = async () => {
+    if (!editEmail.trim() || !editingContact) return;
+    await api()?.updateContact({ id: editingContact.id, email: editEmail.trim(), name: editName.trim() });
+    setEditingContact(null);
+    if (selectedList) handleViewList(selectedList);
+  };
+
+  const handleDeleteContact = async (c: any) => {
+    if (!confirm(`Delete ${c.email}?`)) return;
+    await api()?.deleteContact({ id: c.id, listId: selectedList.id });
+    if (selectedList) handleViewList(selectedList);
+    loadLists();
   };
 
   const filtered = contacts.filter(c =>
@@ -86,13 +134,29 @@ const Contacts: React.FC = () => {
           </h2>
           <p className="text-stone-500 mt-1">Manage reusable mailing lists imported from CSV files.</p>
         </div>
-        <button
-          onClick={() => setShowImport(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg shadow-sm shadow-orange-500/20 transition-all"
-        >
-          <Plus size={18} />
-          Import New List
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowNewList(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 font-medium rounded-lg shadow-sm transition-all"
+          >
+            <Users size={18} />
+            Blank List
+          </button>
+          <button
+            onClick={() => setShowAddContact(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-stone-100 hover:bg-stone-200 border border-stone-200 text-stone-700 font-medium rounded-lg shadow-sm transition-all"
+          >
+            <Plus size={18} />
+            Quick Add Contact
+          </button>
+          <button
+            onClick={() => setShowImport(true)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg shadow-sm shadow-orange-500/20 transition-all"
+          >
+            <Upload size={18} />
+            Import CSV
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-6 flex-1 min-h-0">
@@ -175,19 +239,59 @@ const Contacts: React.FC = () => {
                       <th className="px-5 py-3 font-medium">#</th>
                       <th className="px-5 py-3 font-medium">Email</th>
                       <th className="px-5 py-3 font-medium">Name</th>
+                      <th className="px-5 py-3 font-medium text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-100">
-                    {filtered.slice(0, 200).map((c, i) => (
-                      <tr key={c.id} className="hover:bg-stone-50 transition-colors">
-                        <td className="px-5 py-2.5 text-stone-500 text-xs">{i + 1}</td>
-                        <td className="px-5 py-2.5 font-mono text-xs text-stone-700">{c.email}</td>
-                        <td className="px-5 py-2.5 text-stone-500">{c.name || '—'}</td>
-                      </tr>
-                    ))}
+                    {filtered.slice(0, 200).map((c, i) => {
+                      const isEditing = editingContact?.id === c.id;
+                      return (
+                        <tr key={c.id} className="hover:bg-stone-50 transition-colors group">
+                          <td className="px-5 py-3 text-stone-500 text-xs w-12">{i + 1}</td>
+                          <td className="px-5 py-2.5">
+                            {isEditing ? (
+                              <input 
+                                type="email" 
+                                value={editEmail} 
+                                onChange={e=>setEditEmail(e.target.value)} 
+                                className="w-full bg-white border border-stone-300 rounded px-2 py-1 text-xs" 
+                                autoFocus
+                              />
+                            ) : (
+                              <span className="font-mono text-xs text-stone-700">{c.email}</span>
+                            )}
+                          </td>
+                          <td className="px-5 py-2.5">
+                            {isEditing ? (
+                              <input 
+                                type="text" 
+                                value={editName} 
+                                onChange={e=>setEditName(e.target.value)} 
+                                className="w-full bg-white border border-stone-300 rounded px-2 py-1 text-xs" 
+                              />
+                            ) : (
+                              <span className="text-stone-500 text-sm">{c.name || '—'}</span>
+                            )}
+                          </td>
+                          <td className="px-5 py-2.5 text-right w-28">
+                            {isEditing ? (
+                              <div className="flex justify-end gap-2">
+                                <button onClick={()=>setEditingContact(null)} className="text-stone-400 hover:text-stone-600 text-xs font-medium">Cancel</button>
+                                <button onClick={handleSaveContactEdit} className="text-emerald-600 hover:text-emerald-700 text-xs font-medium bg-emerald-50 px-2 py-1 rounded">Save</button>
+                              </div>
+                            ) : (
+                              <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={()=>startEditContact(c)} className="text-stone-400 hover:text-orange-500">Edit</button>
+                                <button onClick={()=>handleDeleteContact(c)} className="text-stone-400 hover:text-red-500"><Trash2 size={14}/></button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                     {filtered.length > 200 && (
                       <tr>
-                        <td colSpan={3} className="px-5 py-3 text-center text-xs text-stone-400">
+                        <td colSpan={4} className="px-5 py-3 text-center text-xs text-stone-400">
                           Showing 200 of {filtered.length} results. Use search to narrow down.
                         </td>
                       </tr>
@@ -199,6 +303,49 @@ const Contacts: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Blank List Modal */}
+      {showNewList && (
+        <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white border border-stone-200 rounded-2xl p-8 w-[400px] shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-stone-900">Create Blank List</h3>
+              <button onClick={() => setShowNewList(false)} className="text-stone-400 hover:text-stone-600"><X size={20} /></button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm text-stone-600 font-medium mb-1.5 block">List Name *</label>
+                <input
+                  type="text"
+                  value={listName}
+                  onChange={e => setListName(e.target.value)}
+                  placeholder="e.g. Test Group"
+                  className="w-full bg-white border border-stone-300 shadow-sm rounded-lg px-4 py-2.5 text-stone-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-stone-600 font-medium mb-1.5 block">Description (Optional)</label>
+                <input
+                  type="text"
+                  value={listDesc}
+                  onChange={e => setListDesc(e.target.value)}
+                  className="w-full bg-white border border-stone-300 shadow-sm rounded-lg px-4 py-2.5 text-stone-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button onClick={() => setShowNewList(false)} className="flex-1 py-2.5 border border-stone-300 text-stone-600 font-medium rounded-lg hover:bg-stone-50 transition-colors">
+                  Cancel
+                </button>
+                <button onClick={handleCreateList} disabled={!listName.trim()} className="flex-1 py-2.5 bg-orange-500 disabled:bg-orange-300 hover:bg-orange-600 text-white font-medium rounded-lg shadow-sm transition-colors">
+                  Create List
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Single Contact Modal */}
       {showAddContact && (
@@ -219,6 +366,21 @@ const Contacts: React.FC = () => {
                   className="w-full bg-white border border-stone-300 shadow-sm rounded-lg px-4 py-2.5 text-stone-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                 />
               </div>
+              {!selectedList && (
+                <div>
+                  <label className="text-sm text-stone-600 font-medium mb-1.5 block">Add to List *</label>
+                  <select
+                    value={selectedDropdownListId}
+                    onChange={e => setSelectedDropdownListId(Number(e.target.value))}
+                    className="w-full bg-white border border-stone-300 shadow-sm rounded-lg px-4 py-2.5 text-stone-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  >
+                    <option value="" disabled>Select a list...</option>
+                    {lists.map(list => (
+                      <option key={list.id} value={list.id}>{list.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
                 <label className="text-sm text-stone-600 font-medium mb-1.5 block">Name (Optional)</label>
                 <input
