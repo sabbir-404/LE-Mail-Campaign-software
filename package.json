@@ -6,11 +6,10 @@
   "author": "Leading Edge",
   "license": "ISC",
   "scripts": {
-    "postinstall": "electron-rebuild -f -w better-sqlite3",
-    "rebuild-native": "npx @electron/rebuild -f -w better-sqlite3",
+    "postinstall": "npx @electron/rebuild -f -w better-sqlite3",
     "dev": "concurrently -k \"vite --port 5173\" \"wait-on tcp:5173 && tsc -p electron && cross-env VITE_PORT=5173 electron .\"",
     "build": "vite build && tsc -p electron && electron-builder",
-    "build:win": "vite build && tsc -p electron && electron-builder --win",
+    "build:win": "electron-builder --win --publish never",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
@@ -52,7 +51,7 @@
       {
         "provider": "github",
         "owner": "sabbir-404",
-        "repo": "LE-Mail-Campaign"
+        "repo": "LE-Mail-Campaign-software"
       }
     ]
   },
