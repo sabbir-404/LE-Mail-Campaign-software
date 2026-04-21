@@ -28,17 +28,17 @@ const NAV_ITEMS: NavItem[] = [
 
 const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
   return (
-    <div className="w-56 bg-slate-950 flex flex-col border-r border-slate-800/70 shrink-0">
+    <div className="w-56 bg-[#f3f0ec] flex flex-col border-r border-stone-200 shrink-0">
 
       {/* Logo */}
-      <div className="px-5 pt-7 pb-5 border-b border-slate-800/50">
+      <div className="px-5 pt-7 pb-5 border-b border-stone-200">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-lg shadow-indigo-900/50">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-900/20">
             <Mail size={16} className="text-white" />
           </div>
           <div>
-            <div className="text-sm font-bold text-slate-100 leading-none">LE Mail</div>
-            <div className="text-[10px] text-slate-500 uppercase tracking-widest mt-0.5">Campaign</div>
+            <div className="text-sm font-bold text-stone-900 leading-none">LE Mail</div>
+            <div className="text-[10px] text-stone-500 uppercase tracking-widest mt-0.5">Campaign</div>
           </div>
         </div>
       </div>
@@ -54,35 +54,35 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
               className={twMerge(clsx(
                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
                 active
-                  ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 shadow-sm shadow-indigo-900/20'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/70 border border-transparent'
+                  ? 'bg-orange-100 text-orange-700 border border-orange-500/30 shadow-sm shadow-orange-900/5'
+                  : 'text-stone-500 hover:text-stone-800 hover:bg-stone-200/50 border border-transparent'
               ))}
             >
-              <span className={active ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300'}>
+              <span className={active ? 'text-orange-600' : 'text-stone-400 group-hover:text-stone-600'}>
                 {item.icon}
               </span>
               {item.label}
-              {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-400" />}
+              {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-orange-500" />}
             </button>
           );
         })}
       </nav>
 
       {/* Settings at bottom */}
-      <div className="px-3 pb-4 border-t border-slate-800/50 pt-3">
+      <div className="px-3 pb-4 border-t border-stone-200 pt-3">
         <button
           onClick={() => setCurrentPage('settings')}
           className={twMerge(clsx(
             'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
             currentPage === 'settings'
-              ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30'
-              : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800/70 border border-transparent'
+              ? 'bg-orange-100 text-orange-700 border border-orange-500/30'
+              : 'text-stone-500 hover:text-stone-800 hover:bg-stone-200/50 border border-transparent'
           ))}
         >
-          <SettingsIcon size={18} />
+          <SettingsIcon size={18} className={currentPage === 'settings' ? 'text-orange-600' : 'text-stone-400'} />
           Settings
         </button>
-        <div className="text-center text-[10px] text-slate-700 mt-3">v1.0.0</div>
+        <div className="text-center text-[10px] text-stone-400 mt-3">v1.0.0</div>
       </div>
     </div>
   );

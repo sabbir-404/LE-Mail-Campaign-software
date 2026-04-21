@@ -64,122 +64,122 @@ const Settings: React.FC = () => {
 
   return (
     <div className="p-10 max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="mb-8 border-b border-slate-800 pb-5">
-        <h2 className="text-3xl font-bold text-slate-100">SMTP Settings</h2>
-        <p className="text-slate-400 mt-2">Configure the mail server credentials used to dispatch the campaigns.</p>
+      <div className="mb-8 border-b border-stone-200 pb-5">
+        <h2 className="text-3xl font-bold text-stone-900">SMTP Settings</h2>
+        <p className="text-stone-500 mt-2">Configure the mail server credentials used to dispatch the campaigns.</p>
       </div>
 
       {/* Hostinger Quick Reference */}
-      <div className="mb-6 bg-blue-950/40 border border-blue-500/20 rounded-xl p-5">
-        <h3 className="text-sm font-semibold text-blue-300 mb-3">📡 Hostinger Email Server Reference</h3>
+      <div className="mb-6 bg-orange-50 border border-orange-200 rounded-xl p-5 shadow-sm">
+        <h3 className="text-sm font-semibold text-orange-800 mb-3">📡 Hostinger Email Server Reference</h3>
         <div className="grid grid-cols-3 gap-3 text-xs font-mono">
-          <div className="bg-slate-900/60 rounded-lg p-3 border border-slate-800">
-            <div className="text-slate-500 mb-1">SMTP (Outgoing)</div>
-            <div className="text-blue-300 font-bold">smtp.hostinger.com</div>
-            <div className="text-slate-400 mt-1">Port: 465 · SSL</div>
+          <div className="bg-white rounded-lg p-3 border border-orange-100 shadow-sm">
+            <div className="text-stone-500 mb-1">SMTP (Outgoing)</div>
+            <div className="text-orange-600 font-bold">smtp.hostinger.com</div>
+            <div className="text-stone-500 mt-1">Port: 465 · SSL</div>
           </div>
-          <div className="bg-slate-900/60 rounded-lg p-3 border border-slate-800">
-            <div className="text-slate-500 mb-1">IMAP (Incoming)</div>
-            <div className="text-slate-400 font-bold">imap.hostinger.com</div>
-            <div className="text-slate-400 mt-1">Port: 993 · SSL</div>
+          <div className="bg-white rounded-lg p-3 border border-orange-100 shadow-sm">
+            <div className="text-stone-500 mb-1">IMAP (Incoming)</div>
+            <div className="text-stone-600 font-bold">imap.hostinger.com</div>
+            <div className="text-stone-500 mt-1">Port: 993 · SSL</div>
           </div>
-          <div className="bg-slate-900/60 rounded-lg p-3 border border-slate-800">
-            <div className="text-slate-500 mb-1">POP3 (Incoming)</div>
-            <div className="text-slate-400 font-bold">pop.hostinger.com</div>
-            <div className="text-slate-400 mt-1">Port: 995 · SSL</div>
+          <div className="bg-white rounded-lg p-3 border border-orange-100 shadow-sm">
+            <div className="text-stone-500 mb-1">POP3 (Incoming)</div>
+            <div className="text-stone-600 font-bold">pop.hostinger.com</div>
+            <div className="text-stone-500 mt-1">Port: 995 · SSL</div>
           </div>
         </div>
-        <p className="text-xs text-blue-400/70 mt-3">This app only uses SMTP for sending. Enter your Hostinger email credentials below.</p>
+        <p className="text-xs text-orange-700/70 mt-3 font-medium">This app only uses SMTP for sending. Enter your Hostinger email credentials below.</p>
       </div>
 
-      <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8 backdrop-blur-sm">
+      <div className="bg-white border border-stone-200 shadow-sm rounded-xl p-8 backdrop-blur-sm">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">SMTP Host</label>
+            <label className="text-sm font-medium text-stone-700">SMTP Host</label>
             <input 
               type="text" 
               name="host"
               value={settings.host}
               onChange={handleChange}
               placeholder="e.g. smtp.gmail.com" 
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              className="w-full bg-white border border-stone-300 shadow-sm rounded-lg px-4 py-2.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all placeholder:text-stone-400"
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Port</label>
+            <label className="text-sm font-medium text-stone-700">Port</label>
             <input 
               type="text" 
               name="port"
               value={settings.port}
               onChange={handleChange}
               placeholder="e.g. 465 or 587" 
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              className="w-full bg-white border border-stone-300 shadow-sm rounded-lg px-4 py-2.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all placeholder:text-stone-400"
             />
           </div>
           
-          <div className="space-y-2 md:col-span-2 mt-4 pt-4 border-t border-slate-700/50">
-            <h3 className="text-lg font-medium text-slate-200">Authentication</h3>
+          <div className="space-y-2 md:col-span-2 mt-4 pt-4 border-t border-stone-100">
+            <h3 className="text-lg font-semibold text-stone-800">Authentication</h3>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Username / Email</label>
+            <label className="text-sm font-medium text-stone-700">Username / Email</label>
             <input 
               type="text" 
               name="user"
               value={settings.user}
               onChange={handleChange}
               placeholder="user@domain.com" 
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              className="w-full bg-white border border-stone-300 shadow-sm rounded-lg px-4 py-2.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all placeholder:text-stone-400"
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Password / App Password</label>
+            <label className="text-sm font-medium text-stone-700">Password / App Password</label>
             <input 
               type="password" 
               name="pass"
               value={settings.pass}
               onChange={handleChange}
               placeholder="••••••••" 
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              className="w-full bg-white border border-stone-300 shadow-sm rounded-lg px-4 py-2.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all placeholder:text-stone-400"
             />
           </div>
 
-          <div className="space-y-2 md:col-span-2 mt-4 pt-4 border-t border-slate-700/50">
-            <h3 className="text-lg font-medium text-slate-200">Sender Details</h3>
+          <div className="space-y-2 md:col-span-2 mt-4 pt-4 border-t border-stone-100">
+            <h3 className="text-lg font-semibold text-stone-800">Sender Details</h3>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">From Name</label>
+            <label className="text-sm font-medium text-stone-700">From Name</label>
             <input 
               type="text" 
               name="fromName"
               value={settings.fromName}
               onChange={handleChange}
               placeholder="e.g. Leading Edge Deals" 
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              className="w-full bg-white border border-stone-300 shadow-sm rounded-lg px-4 py-2.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all placeholder:text-stone-400"
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">From Email Address</label>
+            <label className="text-sm font-medium text-stone-700">From Email Address</label>
             <input 
               type="email" 
               name="fromEmail"
               value={settings.fromEmail}
               onChange={handleChange}
               placeholder="no-reply@domain.com" 
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              className="w-full bg-white border border-stone-300 shadow-sm rounded-lg px-4 py-2.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all placeholder:text-stone-400"
             />
           </div>
         </div>
 
         <div className="mt-10 flex justify-end items-center gap-4">
-          <span className={clsx("text-emerald-400 flex items-center gap-2 transition-opacity duration-300 text-sm", saved ? "opacity-100" : "opacity-0")}>
+          <span className={clsx("text-emerald-600 font-medium flex items-center gap-2 transition-opacity duration-300 text-sm", saved ? "opacity-100" : "opacity-0")}>
             <CheckCircle size={16} />
             Settings saved locally
           </span>
           <button 
             onClick={handleSave}
-            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg shadow-lg shadow-indigo-600/20 transition-all active:scale-95"
+            className="flex items-center gap-2 px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg shadow-sm shadow-orange-500/20 transition-all active:scale-95"
           >
             <Save size={18} />
             Save Configuration

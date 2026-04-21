@@ -140,16 +140,16 @@ const MailDesign: React.FC = () => {
     <div className="p-8 max-w-7xl mx-auto flex gap-6 h-full animate-in fade-in duration-500">
 
       {/* Sidebar: Saved Designs */}
-      <div className="w-60 flex flex-col shrink-0 bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden">
-        <div className="p-3 border-b border-slate-700/50 bg-slate-800 flex justify-between items-center">
-          <span className="text-sm font-semibold text-slate-200">Designs</span>
-          <button onClick={handleNew} className="p-1.5 bg-indigo-500/20 text-indigo-400 rounded hover:bg-indigo-500/30 transition-colors">
+      <div className="w-60 flex flex-col shrink-0 bg-white border border-stone-200 rounded-xl overflow-hidden shadow-sm">
+        <div className="p-3 border-b border-stone-100 bg-stone-50 flex justify-between items-center">
+          <span className="text-sm font-semibold text-stone-800">Designs</span>
+          <button onClick={handleNew} className="p-1.5 bg-orange-100 text-orange-600 rounded hover:bg-orange-200 transition-colors">
             <Plus size={15} />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+        <div className="flex-1 overflow-y-auto p-2 space-y-1.5 bg-[#f8f5f2]/30">
           {designs.length === 0 && (
-            <div className="text-center text-xs text-slate-500 p-4">No designs yet.</div>
+            <div className="text-center text-xs text-stone-400 p-4">No designs yet.</div>
           )}
           {designs.map(d => (
             <div
@@ -157,14 +157,14 @@ const MailDesign: React.FC = () => {
               onClick={() => handleEdit(d)}
               className={clsx(
                 'px-3 py-2.5 rounded-lg border cursor-pointer group flex justify-between items-start transition-colors',
-                editingId === d.id ? 'bg-indigo-900/30 border-indigo-500/50' : 'bg-slate-900/40 border-slate-800 hover:border-slate-600'
+                editingId === d.id ? 'bg-orange-50 border-orange-200 shadow-sm' : 'bg-white border-stone-200 hover:border-orange-300'
               )}
             >
               <div>
-                <div className="text-sm font-medium text-slate-200 truncate max-w-[130px]">{d.name}</div>
-                <div className="text-xs text-slate-500 truncate max-w-[130px]">{d.subject || 'No subject'}</div>
+                <div className="text-sm font-medium text-stone-800 truncate max-w-[130px]">{d.name}</div>
+                <div className="text-xs text-stone-500 truncate max-w-[130px]">{d.subject || 'No subject'}</div>
               </div>
-              <button onClick={e => { e.stopPropagation(); handleDelete(d.id); }} className="text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+              <button onClick={e => { e.stopPropagation(); handleDelete(d.id); }} className="text-stone-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                 <Trash2 size={13} />
               </button>
             </div>
@@ -173,12 +173,12 @@ const MailDesign: React.FC = () => {
       </div>
 
       {/* Main Editor Area */}
-      <div className="flex-1 flex flex-col min-h-0 bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 bg-white border border-stone-200 rounded-xl overflow-hidden shadow-sm">
 
         {/* Toolbar */}
-        <div className="px-6 py-3 border-b border-slate-700/50 bg-slate-800 flex justify-between items-center shrink-0">
+        <div className="px-6 py-3 border-b border-stone-100 bg-stone-50 flex justify-between items-center shrink-0">
           <div>
-            <h2 className="text-lg font-bold text-slate-100">{editingId ? 'Edit Design' : 'New Design'}</h2>
+            <h2 className="text-lg font-bold text-stone-900">{editingId ? 'Edit Design' : 'New Design'}</h2>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -186,15 +186,15 @@ const MailDesign: React.FC = () => {
               className={clsx(
                 'flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg border transition-all font-medium',
                 showPreview
-                  ? 'bg-indigo-600/20 text-indigo-400 border-indigo-500/40'
-                  : 'bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600'
+                  ? 'bg-orange-100 text-orange-700 border-orange-300 shadow-sm'
+                  : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50'
               )}
             >
               {showPreview ? <><Code size={14} /> Edit HTML</> : <><Eye size={14} /> Preview</>}
             </button>
             <button
               onClick={handleSave}
-              className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-all"
+              className="flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-all shadow-sm shadow-orange-500/20"
             >
               <Save size={14} />
               {editingId ? 'Update' : 'Save'}
@@ -203,35 +203,35 @@ const MailDesign: React.FC = () => {
         </div>
 
         {/* Meta Fields */}
-        <div className="px-6 py-4 border-b border-slate-700/30 shrink-0 grid grid-cols-2 gap-4">
+        <div className="px-6 py-4 border-b border-stone-100 shrink-0 grid grid-cols-2 gap-4">
           <div>
-            <label className="text-xs font-medium text-slate-400 mb-1 block">Design Name</label>
+            <label className="text-xs font-semibold text-stone-600 mb-1 block">Design Name</label>
             <input type="text" name="name" value={formData.name} onChange={handleChange}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+              className="w-full bg-white border border-stone-300 shadow-sm rounded-lg px-3 py-2 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500" />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-400 mb-1 block">Default Email Subject</label>
+            <label className="text-xs font-semibold text-stone-600 mb-1 block">Default Email Subject</label>
             <input type="text" name="subject" placeholder="Your Exclusive Offer Awaits!" value={formData.subject} onChange={handleChange}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+              className="w-full bg-white border border-stone-300 shadow-sm rounded-lg px-3 py-2 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 placeholder:text-stone-400" />
           </div>
         </div>
 
         {/* Toggle Wrappers */}
-        <div className="px-6 py-3 border-b border-slate-700/30 bg-slate-900/30 shrink-0 flex flex-wrap gap-x-8 gap-y-2 items-center">
-          <label className="flex items-center gap-2.5 cursor-pointer text-sm text-slate-300">
+        <div className="px-6 py-3 border-b border-stone-100 bg-[#f8f5f2]/50 shrink-0 flex flex-wrap gap-x-8 gap-y-2 items-center">
+          <label className="flex items-center gap-2.5 cursor-pointer text-sm font-medium text-stone-700">
             <input type="checkbox" name="use_header" checked={formData.use_header} onChange={handleChange}
-              className="w-4 h-4 rounded accent-indigo-500" />
+              className="w-4 h-4 rounded border-stone-300 accent-orange-500" />
             Branded Header (Logo)
           </label>
-          <label className="flex items-center gap-2.5 cursor-pointer text-sm text-slate-300">
+          <label className="flex items-center gap-2.5 cursor-pointer text-sm font-medium text-stone-700">
             <input type="checkbox" name="use_footer" checked={formData.use_footer} onChange={handleChange}
-              className="w-4 h-4 rounded accent-indigo-500" />
+              className="w-4 h-4 rounded border-stone-300 accent-orange-500" />
             Branded Footer (Address / Socials)
           </label>
 
           {/* Theme Selector */}
           <div className="ml-auto flex items-center gap-2">
-            <span className="text-xs text-slate-500">Email Theme:</span>
+            <span className="text-xs font-medium text-stone-500">Email Theme:</span>
             {THEME_OPTIONS.map(opt => (
               <button
                 key={opt.value}
@@ -240,8 +240,8 @@ const MailDesign: React.FC = () => {
                 className={clsx(
                   'flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md border transition-all font-medium',
                   formData.email_theme === opt.value
-                    ? 'bg-indigo-600/30 text-indigo-300 border-indigo-500/50'
-                    : 'bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-500'
+                    ? 'bg-orange-100 text-orange-700 border-orange-300 shadow-sm'
+                    : 'bg-white text-stone-500 border-stone-200 hover:border-stone-300'
                 )}
               >
                 {opt.icon}
@@ -252,7 +252,7 @@ const MailDesign: React.FC = () => {
         </div>
 
         {/* Editor / Preview */}
-        <div className="flex-1 min-h-0 relative">
+        <div className="flex-1 min-h-0 relative bg-stone-50">
           {showPreview ? (
             <iframe
               srcDoc={buildPreviewHtmlLocal()}
@@ -265,7 +265,7 @@ const MailDesign: React.FC = () => {
               name="body_html"
               value={formData.body_html}
               onChange={handleChange}
-              className="w-full h-full bg-[#0a0f1c] font-mono text-sm text-emerald-400 p-5 resize-none focus:outline-none leading-relaxed"
+              className="w-full h-full bg-stone-50 font-mono text-sm text-stone-800 p-5 resize-none focus:outline-none leading-relaxed border-none"
               placeholder="<div>Write your HTML email body here...</div>"
             />
           )}

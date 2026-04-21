@@ -13,9 +13,9 @@ const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<PageView>('dashboard');
 
   return (
-    <div className="flex h-screen bg-slate-900 text-slate-100 font-sans overflow-hidden">
+    <div className="flex h-screen bg-[#f8f5f2] text-stone-800 font-sans overflow-hidden">
       <Sidebar currentPage={currentPage} setCurrentPage={setCurrentPage} />
-      <main className="flex-1 overflow-y-auto bg-slate-900">
+      <main className="flex-1 overflow-y-auto bg-[#f8f5f2]">
         {currentPage === 'dashboard' && <Dashboard setCurrentPage={setCurrentPage} />}
         {currentPage === 'campaign'  && <Campaign />}
         {currentPage === 'design'    && <MailDesign />}
