@@ -28,9 +28,13 @@ function createWindow() {
     },
   });
 
-  const isDev = !app.isPackaged || process.env.NODE_ENV === 'development';
+  const isDev = !app.isPackaged;
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
+    // Detect whichever port Vite is actually running on
+    const port = process.env.VITE_PORT || '5173';
+    mainWindow.loadURL(`http://localhost:${port}`).catch(() => {
+      mainWindow?.loadURL('http://localhost:5174');
+    });
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
@@ -247,13 +251,11 @@ ipcMain.on('start-campaign', async (event, { csvPath, contactListId, designId, d
     }
 
     const row = results[i];
-    // We assume the CSV has a column 'email' or 'Email'. Let's find it flexibly.
-    const emailKey = Object.keys(row).find(k => k.toLowerCase() === 'email');
-    const targetEmail = emailKey ? row[emailKey] : null;
+    const targetEmail = row.email;
 
     if (!targetEmail) {
       failed++;
-      event.sender.send('campaign-progress', { sent, failed, currentEmail: `No email column in row ${i+1}` });
+      event.sender.send('campaign-progress', { sent, failed, currentEmail: `Missing email in row ${i+1}` });
       continue;
     }
 
@@ -264,17 +266,17 @@ ipcMain.on('start-campaign', async (event, { csvPath, contactListId, designId, d
         await transporter.sendMail({
           from: `"${currentSettings.from_name}" <${currentSettings.from_email || currentSettings.username}>`,
           to: targetEmail,
-          subject: row.subject || row.Subject || campaignTargetSubject,
+          subject: campaignTargetSubject,
           html: htmlTemplate, 
         });
         sent++;
         addSendRecord({ campaign_id: campaignId, recipient_email: targetEmail, status: 'sent' });
-        event.sender.send('campaign-log', { type: 'success', msg: `Sent to ${targetEmail}` });
+        event.sender.send('campaign-log', { type: 'success', msg: `✓ Sent to ${targetEmail}` });
       }
     } catch (err: any) {
       failed++;
       addSendRecord({ campaign_id: campaignId, recipient_email: targetEmail, status: 'failed', error_message: err.message });
-      event.sender.send('campaign-log', { type: 'error', msg: `Failed sending to ${targetEmail}: ${err.message}` });
+      event.sender.send('campaign-log', { type: 'error', msg: `✗ Failed → ${targetEmail}: ${err.message}` });
     }
 
     updateCampaignProgress(campaignId, sent, failed);
