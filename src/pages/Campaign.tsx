@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, StopCircle, FileSpreadsheet, FileCode2, Loader2, Upload, Users } from 'lucide-react';
+import { Play, StopCircle, FileSpreadsheet, FileCode2, Loader2, Users } from 'lucide-react';
 import clsx from 'clsx';
 
 interface CampaignStatus {

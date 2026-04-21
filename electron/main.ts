@@ -12,6 +12,7 @@ import {
   getAllContactLists, getContactListById, createContactList, deleteContactList,
   getContactsByListId, insertContactsIntoList, getDashboardStats
 } from './database';
+import { LOGO_BLACK_B64, LOGO_WHITE_B64 } from './logoData';
 
 let mainWindow: BrowserWindow | null = null;
 let dbInitialized = false;
@@ -128,24 +129,100 @@ ipcMain.on('stop-campaign', () => {
   isCampaignRunning = false;
 });
 
-const DEFAULT_HEADER = `
-<div style="background-color: #f8fafc; padding: 20px; text-align: center; border-bottom: 2px solid #e2e8f0;">
-  <img src="YOUR_LOGO_URL_HERE" alt="Company Logo" style="max-height: 60px;" />
-</div>
-<div style="padding: 20px; font-family: sans-serif; color: #1e293b;">
-`;
+// ── EMAIL TEMPLATE BUILDER ───────────────────────────────────────────────────
+// theme: 'light' | 'dark' | 'adaptive'
+function buildEmailHtml(bodyHtml: string, useHeader: boolean, useFooter: boolean, theme: string): string {
 
-const DEFAULT_FOOTER = `
-</div>
-<div style="background-color: #0f172a; padding: 30px 20px; text-align: center; color: #94a3b8; font-family: sans-serif; font-size: 14px;">
-  <p style="margin: 0 0 10px 0;"><strong>Leading Edge</strong></p>
-  <p style="margin: 0 0 10px 0;">House# 45, Road# 12, Sector# 10, Uttara, Dhaka</p>
-  <p style="margin: 0 0 15px 0;"><a href="https://leadingedge.com.bd/" style="color: #60a5fa; text-decoration: none;">leadingedge.com.bd</a></p>
-  <div style="font-size: 12px; margin-top: 20px; border-top: 1px solid #1e293b; padding-top: 15px;">
-    Follow us on Social Media
+  const isLight  = theme === 'light';
+  const isDark   = theme === 'dark';
+  const isAdapt  = theme === 'adaptive';
+
+  // Colour tokens per theme
+  const bg        = isDark ? '#0f172a' : '#f1f5f9';
+  const cardBg    = isDark ? '#1e293b' : '#ffffff';
+  const bodyColor = isDark ? '#cbd5e1' : '#334155';
+  const logoSrc   = isDark ? LOGO_WHITE_B64 : LOGO_BLACK_B64;
+  const headerBg  = isDark ? '#0f172a' : '#ffffff';
+  const headerBorder = isDark ? '#334155' : '#e2e8f0';
+
+  // ── ADAPTIVE: inject a <style> block with prefers-color-scheme media query.
+  // "Force light" technique: set color-scheme:light so Gmail/Apple Mail won't
+  // invert our carefully chosen colours, but we also supply our OWN dark palette
+  // via @media so users with dark mode still get a polished experience.
+  const adaptiveStyle = isAdapt ? `
+    @media (prefers-color-scheme: dark) {
+      .email-outer  { background-color: #0f172a !important; }
+      .email-card   { background-color: #1e293b !important; }
+      .email-header { background-color: #0f172a !important; border-bottom-color: #334155 !important; }
+      .email-body   { color: #cbd5e1 !important; }
+      .email-footer { background-color: #020617 !important; }
+      .logo-dark    { display: none !important; }
+      .logo-light   { display: inline !important; }
+    }
+    @media (prefers-color-scheme: light) {
+      .logo-dark  { display: inline !important; }
+      .logo-light { display: none !important; }
+    }` : '';
+
+  const forceColorScheme = isLight  ? 'light'
+                         : isDark   ? 'dark'
+                         : 'light dark';
+
+  const header = useHeader ? `
+    <div class="email-header" style="background-color:${headerBg}; padding:20px; text-align:center; border-bottom:2px solid ${headerBorder};">
+      ${ isAdapt ? `
+        <img class="logo-dark"  src="${LOGO_BLACK_B64}" alt="Leading Edge" style="max-height:55px; display:block; margin:0 auto;" />
+        <img class="logo-light" src="${LOGO_WHITE_B64}" alt="Leading Edge" style="max-height:55px; display:none;  margin:0 auto;" />
+      ` : `
+        <img src="${logoSrc}" alt="Leading Edge" style="max-height:55px; display:block; margin:0 auto;" />
+      `}
+    </div>` : '';
+
+  const footer = useFooter ? `
+    <div class="email-footer" style="background-color:#0f172a; padding:28px 20px; text-align:center; color:#94a3b8; font-family:'Segoe UI',Arial,sans-serif; font-size:13px;">
+      <p style="margin:0 0 6px; font-size:15px; font-weight:700; color:#e2e8f0;">Leading Edge</p>
+      <p style="margin:0 0 4px;">House# 45, Road# 12, Sector# 10, Uttara, Dhaka-1230</p>
+      <p style="margin:0 0 14px;">
+        <a href="https://leadingedge.com.bd" style="color:#60a5fa; text-decoration:none;">leadingedge.com.bd</a>
+        &nbsp;|&nbsp;
+        <a href="mailto:sales@leadingedge.com.bd" style="color:#60a5fa; text-decoration:none;">sales@leadingedge.com.bd</a>
+      </p>
+      <p style="margin:0 0 14px;">
+        <a href="https://www.facebook.com/leadingedgebd" style="color:#60a5fa; text-decoration:none; margin:0 8px;">Facebook</a>
+        <a href="#" style="color:#60a5fa; text-decoration:none; margin:0 8px;">LinkedIn</a>
+        <a href="#" style="color:#60a5fa; text-decoration:none; margin:0 8px;">YouTube</a>
+      </p>
+      <div style="font-size:11px; color:#475569; border-top:1px solid #1e293b; padding-top:12px; margin-top:8px;">
+        &copy; ${new Date().getFullYear()} Leading Edge. All rights reserved.
+      </div>
+    </div>` : '';
+
+  return `<!DOCTYPE html>
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="${forceColorScheme}" />
+  <meta name="supported-color-schemes" content="${forceColorScheme}" />
+  <style>
+    :root { color-scheme: ${forceColorScheme}; }
+    body  { margin:0; padding:0; -webkit-text-size-adjust:100%; }
+    img   { border:0; max-width:100%; height:auto; }
+    ${adaptiveStyle}
+  </style>
+</head>
+<body>
+<div class="email-outer" style="background-color:${bg}; padding:20px 10px; font-family:'Segoe UI',Arial,sans-serif;">
+  <div class="email-card" style="max-width:620px; margin:0 auto; background-color:${cardBg}; border-radius:12px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+    ${header}
+    <div class="email-body" style="padding:28px 32px; color:${bodyColor}; font-size:15px; line-height:1.7;">
+      ${bodyHtml}
+    </div>
+    ${footer}
   </div>
 </div>
-`;
+</body></html>`;
+}
 
 ipcMain.on('start-campaign', async (event, { csvPath, contactListId, designId, designData, delay, subject }) => {
   const currentSettings: any = getSmtpSettings();
@@ -156,11 +233,14 @@ ipcMain.on('start-campaign', async (event, { csvPath, contactListId, designId, d
   }
 
   isCampaignRunning = true;
-  event.sender.send('campaign-log', { type: 'info', msg: 'Loading HTML Template...' });
-  
-  let htmlTemplate = designData.body_html;
-  if (designData.use_header) htmlTemplate = DEFAULT_HEADER + htmlTemplate;
-  if (designData.use_footer) htmlTemplate = htmlTemplate + DEFAULT_FOOTER;
+  event.sender.send('campaign-log', { type: 'info', msg: 'Building email template...' });
+
+  const htmlTemplate = buildEmailHtml(
+    designData.body_html,
+    !!designData.use_header,
+    !!designData.use_footer,
+    designData.email_theme || 'light'
+  );
 
   const campaignTargetSubject = subject || designData.subject || 'Promotional Offer';
 

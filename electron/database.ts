@@ -18,10 +18,16 @@ export function initDatabase() {
       body_html TEXT NOT NULL DEFAULT '',
       use_header INTEGER NOT NULL DEFAULT 1,
       use_footer INTEGER NOT NULL DEFAULT 1,
+      email_theme TEXT NOT NULL DEFAULT 'light',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `);
+
+  // Migrate existing DBs — add email_theme if missing
+  try {
+    db.exec(`ALTER TABLE mail_designs ADD COLUMN email_theme TEXT NOT NULL DEFAULT 'light';`);
+  } catch (_) { /* Column already exists, skip */ }
 
   // Campaign history table
   db.exec(`
@@ -125,23 +131,23 @@ export function getDesignById(id: number) {
 
 export function saveDesign(design: {
   name: string; subject: string; body_html: string;
-  use_header: number; use_footer: number;
+  use_header: number; use_footer: number; email_theme: string;
 }) {
   const result = db.prepare(`
-    INSERT INTO mail_designs (name, subject, body_html, use_header, use_footer)
-    VALUES (@name, @subject, @body_html, @use_header, @use_footer)
+    INSERT INTO mail_designs (name, subject, body_html, use_header, use_footer, email_theme)
+    VALUES (@name, @subject, @body_html, @use_header, @use_footer, @email_theme)
   `).run(design);
   return result.lastInsertRowid;
 }
 
 export function updateDesign(id: number, design: {
   name: string; subject: string; body_html: string;
-  use_header: number; use_footer: number;
+  use_header: number; use_footer: number; email_theme: string;
 }) {
   db.prepare(`
     UPDATE mail_designs SET
       name = @name, subject = @subject, body_html = @body_html,
-      use_header = @use_header, use_footer = @use_footer,
+      use_header = @use_header, use_footer = @use_footer, email_theme = @email_theme,
       updated_at = datetime('now')
     WHERE id = ${id}
   `).run(design);

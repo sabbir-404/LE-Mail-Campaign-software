@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, CheckCircle2, XCircle, Users, Layers, PenTool, TrendingUp, Clock, ArrowRight } from 'lucide-react';
+import { Mail, CheckCircle2, XCircle, Users, PenTool, TrendingUp, Clock, ArrowRight } from 'lucide-react';
 import clsx from 'clsx';
 import { PageView } from '../App';
 

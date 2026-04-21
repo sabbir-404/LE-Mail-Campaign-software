@@ -1,35 +1,67 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Plus, Trash2, Eye, EyeOff, Code } from 'lucide-react';
+import { Save, Plus, Trash2, Eye, Code, Sun, Moon, Palette } from 'lucide-react';
 import clsx from 'clsx';
+import { LOGO_BLACK_B64, LOGO_WHITE_B64 } from '../assets/logoData';
 
-// Mirror of what the backend injects — kept in sync for accurate preview
-const PREVIEW_HEADER = `
-<div style="background-color: #f8fafc; padding: 20px; text-align: center; border-bottom: 2px solid #e2e8f0;">
-  <img src="https://leadingedge.com.bd/wp-content/uploads/2023/05/logo.png" alt="Leading Edge" style="max-height: 60px;" />
-</div>
-<div style="padding: 24px; font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b;">
-`;
+// Mirror backend buildEmailHtml for accurate in-app preview
+function buildPreviewHtml(bodyHtml: string, useHeader: boolean, useFooter: boolean, theme: string): string {
+  const isDark  = theme === 'dark';
+  const isAdapt = theme === 'adaptive';
 
-const PREVIEW_FOOTER = `
-</div>
-<div style="background-color: #0f172a; padding: 30px 20px; text-align: center; color: #94a3b8; font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px;">
-  <p style="margin: 0 0 6px 0; font-size: 16px; font-weight: bold; color: #e2e8f0;">Leading Edge</p>
-  <p style="margin: 0 0 4px 0;">House# 45, Road# 12, Sector# 10, Uttara, Dhaka-1230</p>
-  <p style="margin: 0 0 14px 0;">
-    <a href="https://leadingedge.com.bd" style="color: #60a5fa; text-decoration: none;">leadingedge.com.bd</a>
-    &nbsp;|&nbsp;
-    <a href="mailto:info@leadingedge.com.bd" style="color: #60a5fa; text-decoration: none;">info@leadingedge.com.bd</a>
-  </p>
-  <div style="display: flex; justify-content: center; gap: 14px; margin-bottom: 16px;">
-    <a href="https://www.facebook.com/leadingedgebd" style="color: #60a5fa; text-decoration: none; font-size: 13px;">Facebook</a>
-    <a href="#" style="color: #60a5fa; text-decoration: none; font-size: 13px;">LinkedIn</a>
-    <a href="#" style="color: #60a5fa; text-decoration: none; font-size: 13px;">YouTube</a>
-  </div>
-  <div style="font-size: 11px; color: #475569; border-top: 1px solid #1e293b; padding-top: 14px;">
-    © ${new Date().getFullYear()} Leading Edge. All rights reserved. You received this email because you are our valued customer.
-  </div>
-</div>
-`;
+  const bg        = isDark ? '#0f172a' : '#f1f5f9';
+  const cardBg    = isDark ? '#1e293b' : '#ffffff';
+  const bodyColor = isDark ? '#cbd5e1' : '#334155';
+  const logoSrc   = isDark ? LOGO_WHITE_B64 : LOGO_BLACK_B64;
+  const headerBg  = isDark ? '#0f172a' : '#ffffff';
+  const headerBorder = isDark ? '#334155' : '#e2e8f0';
+
+  const header = useHeader ? `
+    <div style="background-color:${headerBg}; padding:20px; text-align:center; border-bottom:2px solid ${headerBorder};">
+      ${ isAdapt
+        ? `<img src="${LOGO_BLACK_B64}" alt="Leading Edge" style="max-height:50px; display:block; margin:0 auto;" />
+           <small style="display:block;text-align:center;color:#94a3b8;font-size:10px;margin-top:4px;">[Adaptive: shows white logo in dark mode]</small>`
+        : `<img src="${logoSrc}" alt="Leading Edge" style="max-height:50px; display:block; margin:0 auto;" />`
+      }
+    </div>` : '';
+
+  const footer = useFooter ? `
+    <div style="background-color:#0f172a; padding:28px 20px; text-align:center; color:#94a3b8; font-family:'Segoe UI',Arial,sans-serif; font-size:13px;">
+      <p style="margin:0 0 6px; font-size:15px; font-weight:700; color:#e2e8f0;">Leading Edge</p>
+      <p style="margin:0 0 4px;">House# 45, Road# 12, Sector# 10, Uttara, Dhaka-1230</p>
+      <p style="margin:0 0 14px;">
+        <a href="https://leadingedge.com.bd" style="color:#60a5fa; text-decoration:none;">leadingedge.com.bd</a>
+        &nbsp;|&nbsp;
+        <a href="mailto:sales@leadingedge.com.bd" style="color:#60a5fa; text-decoration:none;">sales@leadingedge.com.bd</a>
+      </p>
+      <p style="margin:0 0 14px;">
+        <a href="https://www.facebook.com/leadingedgebd" style="color:#60a5fa;text-decoration:none;margin:0 8px;">Facebook</a>
+        <a href="#" style="color:#60a5fa;text-decoration:none;margin:0 8px;">LinkedIn</a>
+        <a href="#" style="color:#60a5fa;text-decoration:none;margin:0 8px;">YouTube</a>
+      </p>
+      <div style="font-size:11px;color:#475569;border-top:1px solid #1e293b;padding-top:12px;margin-top:8px;">
+        &copy; ${new Date().getFullYear()} Leading Edge. All rights reserved.
+      </div>
+    </div>` : '';
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+  <style>
+    body{margin:0;padding:0;background:${bg};font-family:'Segoe UI',Arial,sans-serif;}
+  </style></head>
+  <body>
+  <div style="background-color:${bg};padding:20px 10px;">
+    <div style="max-width:620px;margin:0 auto;background-color:${cardBg};border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+      ${header}
+      <div style="padding:28px 32px;color:${bodyColor};font-size:15px;line-height:1.7;">${bodyHtml}</div>
+      ${footer}
+    </div>
+  </div></body></html>`;
+}
+
+const THEME_OPTIONS = [
+  { value: 'light',    label: 'Light',    icon: <Sun size={14} />,     hint: 'White background ∙ Black logo ∙ Overrides device dark mode' },
+  { value: 'dark',     label: 'Dark',     icon: <Moon size={14} />,    hint: 'Dark background ∙ White logo ∙ Always renders dark' },
+  { value: 'adaptive', label: 'Adaptive', icon: <Palette size={14} />, hint: 'Matches device setting ∙ Correct logo auto-selected ∙ Recommended for mobile' },
+];
 
 const MailDesign: React.FC = () => {
   const [designs, setDesigns] = useState<any[]>([]);
@@ -42,6 +74,7 @@ const MailDesign: React.FC = () => {
     body_html: '<h2 style="color:#1e293b">Hello valued customer!</h2>\n<p style="color:#475569; line-height:1.7;">Thank you for being with us.</p>',
     use_header: true,
     use_footer: true,
+    email_theme: 'light',
   });
 
   const loadDesigns = () => {
@@ -66,6 +99,7 @@ const MailDesign: React.FC = () => {
       body_html: formData.body_html,
       use_header: formData.use_header ? 1 : 0,
       use_footer: formData.use_footer ? 1 : 0,
+      email_theme: formData.email_theme,
     };
     if (editingId) {
       (window as any).electronAPI?.updateDesign(editingId, payload);
@@ -83,6 +117,7 @@ const MailDesign: React.FC = () => {
       body_html: d.body_html,
       use_header: d.use_header === 1,
       use_footer: d.use_footer === 1,
+      email_theme: d.email_theme || 'light',
     });
     setShowPreview(false);
   };
@@ -95,16 +130,11 @@ const MailDesign: React.FC = () => {
 
   const handleNew = () => {
     setEditingId(null);
-    setFormData({ name: 'New Design', subject: '', body_html: '', use_header: true, use_footer: true });
+    setFormData({ name: 'New Design', subject: '', body_html: '', use_header: true, use_footer: true, email_theme: 'light' });
     setShowPreview(false);
   };
 
-  const buildPreviewHtml = () => {
-    let html = formData.body_html;
-    if (formData.use_header) html = PREVIEW_HEADER + html;
-    if (formData.use_footer) html = html + PREVIEW_FOOTER;
-    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{margin:0;padding:0;background:#f1f5f9;}</style></head><body>${html}</body></html>`;
-  };
+  const buildPreviewHtmlLocal = () => buildPreviewHtml(formData.body_html, formData.use_header, formData.use_footer, formData.email_theme);
 
   return (
     <div className="p-8 max-w-7xl mx-auto flex gap-6 h-full animate-in fade-in duration-500">
@@ -187,28 +217,45 @@ const MailDesign: React.FC = () => {
         </div>
 
         {/* Toggle Wrappers */}
-        <div className="px-6 py-3 border-b border-slate-700/30 bg-slate-900/30 shrink-0 flex gap-8">
+        <div className="px-6 py-3 border-b border-slate-700/30 bg-slate-900/30 shrink-0 flex flex-wrap gap-x-8 gap-y-2 items-center">
           <label className="flex items-center gap-2.5 cursor-pointer text-sm text-slate-300">
             <input type="checkbox" name="use_header" checked={formData.use_header} onChange={handleChange}
               className="w-4 h-4 rounded accent-indigo-500" />
-            <span className="flex items-center gap-1.5">
-              Include Branded Header <span className="text-xs text-slate-500">(Logo)</span>
-            </span>
+            Branded Header (Logo)
           </label>
           <label className="flex items-center gap-2.5 cursor-pointer text-sm text-slate-300">
             <input type="checkbox" name="use_footer" checked={formData.use_footer} onChange={handleChange}
               className="w-4 h-4 rounded accent-indigo-500" />
-            <span className="flex items-center gap-1.5">
-              Include Branded Footer <span className="text-xs text-slate-500">(Address / Socials)</span>
-            </span>
+            Branded Footer (Address / Socials)
           </label>
+
+          {/* Theme Selector */}
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-xs text-slate-500">Email Theme:</span>
+            {THEME_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setFormData(prev => ({ ...prev, email_theme: opt.value }))}
+                title={opt.hint}
+                className={clsx(
+                  'flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md border transition-all font-medium',
+                  formData.email_theme === opt.value
+                    ? 'bg-indigo-600/30 text-indigo-300 border-indigo-500/50'
+                    : 'bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-500'
+                )}
+              >
+                {opt.icon}
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Editor / Preview */}
         <div className="flex-1 min-h-0 relative">
           {showPreview ? (
             <iframe
-              srcDoc={buildPreviewHtml()}
+              srcDoc={buildPreviewHtmlLocal()}
               className="w-full h-full border-0"
               sandbox="allow-same-origin"
               title="Email Preview"
