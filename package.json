@@ -1,0 +1,73 @@
+{
+  "name": "le-mail-campaign-software",
+  "version": "1.0.0",
+  "description": "LE Mail Campaign software to send bulk emails via SMTP",
+  "main": "dist-electron/main.js",
+  "author": "Leading Edge",
+  "license": "ISC",
+  "scripts": {
+    "dev": "concurrently -k \"vite\" \"wait-on tcp:5173 && tsc -p electron && electron .\"",
+    "build": "vite build && tsc -p electron && electron-builder",
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "build": {
+    "appId": "com.leadingedge.mailcampaign",
+    "productName": "LE Mail Campaign",
+    "directories": {
+      "output": "release/${version}"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "public/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false
+    },
+    "mac": {
+      "target": ["dmg"],
+      "icon": "public/icon.ico"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "sabbir-404",
+        "repo": "LE-Mail-Campaign"
+      }
+    ]
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "csv-parser": "^3.0.0",
+    "electron-updater": "^6.1.8",
+    "lucide-react": "^0.368.0",
+    "nodemailer": "^6.9.13",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tailwind-merge": "^2.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "@types/react": "^18.2.79",
+    "@types/react-dom": "^18.2.25",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.19",
+    "concurrently": "^8.2.2",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.8",
+    "wait-on": "^7.2.0"
+  }
+}
