@@ -179,14 +179,14 @@ function buildEmailHtml(bodyHtml: string, useHeader: boolean, useFooter: boolean
   const bg        = isDark ? '#0f172a' : '#f1f5f9';
   const cardBg    = isDark ? '#1e293b' : '#ffffff';
   const bodyColor = isDark ? '#cbd5e1' : '#334155';
-  const logoSrc   = isDark ? LOGO_WHITE_B64 : LOGO_BLACK_B64;
   const headerBg  = isDark ? '#0f172a' : '#ffffff';
   const headerBorder = isDark ? '#334155' : '#e2e8f0';
 
-  // ── ADAPTIVE: inject a <style> block with prefers-color-scheme media query.
-  // "Force light" technique: set color-scheme:light so Gmail/Apple Mail won't
-  // invert our carefully chosen colours, but we also supply our OWN dark palette
-  // via @media so users with dark mode still get a polished experience.
+  const LOGO_BLACK_URL = 'https://leadingedge.com.bd/wp-content/uploads/2025/10/logo-black-scaled.png';
+  const LOGO_WHITE_URL = 'https://leadingedge.com.bd/wp-content/uploads/2025/10/logo-white-scaled.png';
+  const logoSrc   = isDark ? LOGO_WHITE_URL : LOGO_BLACK_URL;
+
+  // Adaptive dark/light CSS overrides for email clients that respect prefers-color-scheme
   const adaptiveStyle = isAdapt ? `
     @media (prefers-color-scheme: dark) {
       .email-outer  { background-color: #0f172a !important; }
@@ -206,41 +206,51 @@ function buildEmailHtml(bodyHtml: string, useHeader: boolean, useFooter: boolean
                          : isDark   ? 'dark'
                          : 'light dark';
 
-  const LOGO_BLACK_URL = 'https://leadingedge.com.bd/wp-content/uploads/2025/10/logo-black-scaled.png';
-  const LOGO_WHITE_URL = 'https://leadingedge.com.bd/wp-content/uploads/2025/10/logo-white-scaled.png';
-  const logoSrc   = isDark ? LOGO_WHITE_URL : LOGO_BLACK_URL;
+  // Social SVG icons - 20x20 for cleaner fit in 38px circle
+  const FB_SVG  = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#e2e8f0" style="display:block;"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>`;
+  const IG_SVG  = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e2e8f0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="#e2e8f0" stroke="none"/></svg>`;
+  const X_SVG   = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#e2e8f0" style="display:block;"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`;
+  const LI_SVG  = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#e2e8f0" style="display:block;"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>`;
+  const MAP_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#e2e8f0" style="display:block;"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`;
 
-  const FB_SVG  = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>`;
-  const IG_SVG  = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg>`;
-  const X_SVG   = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`;
-  const LI_SVG  = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>`;
-  const SOCIAL_BTN = `display:inline-block;margin:0 5px;width:38px;height:38px;line-height:38px;border-radius:50%;background:rgba(255,255,255,0.13);color:#e2e8f0;text-align:center;text-decoration:none;vertical-align:middle;`;
+  // Helper: renders a social icon in a perfectly centered circle (email-safe using padding)
+  const socialIcon = (href: string, svg: string, label: string) =>
+    `<a href="${href}" title="${label}" style="display:inline-block;margin:0 4px;text-decoration:none;">` +
+      `<span style="display:inline-block;width:38px;height:38px;background:rgba(255,255,255,0.14);border-radius:50%;padding:10px;box-sizing:border-box;vertical-align:middle;">${svg}</span>` +
+    `</a>`;
 
   const header = useHeader ? `
     <div class="email-header" style="background-color:${headerBg}; padding:16px 20px; text-align:center; border-bottom:2px solid ${headerBorder};">
       ${ isAdapt ? `
-        <img class="logo-dark"  src="${LOGO_BLACK_URL}" alt="Leading Edge" style="max-height:48px; max-width:200px; display:block; margin:0 auto;" />
-        <img class="logo-light" src="${LOGO_WHITE_URL}" alt="Leading Edge" style="max-height:48px; max-width:200px; display:none;  margin:0 auto;" />
+        <img class="logo-dark"  src="https://leadingedge.com.bd/wp-content/uploads/2025/10/logo-black-scaled.png" alt="Leading Edge" style="max-height:48px; max-width:200px; display:block; margin:0 auto;" />
+        <img class="logo-light" src="https://leadingedge.com.bd/wp-content/uploads/2025/10/logo-white-scaled.png" alt="Leading Edge" style="max-height:48px; max-width:200px; display:none;  margin:0 auto;" />
       ` : `
         <img src="${logoSrc}" alt="Leading Edge" style="max-height:48px; max-width:200px; display:block; margin:0 auto;" />
       `}
     </div>` : '';
 
   const footer = useFooter ? `
-    <div class="email-footer" style="background-color:#0f172a; padding:32px 20px 24px; text-align:center; color:#94a3b8; font-family:'Segoe UI',Arial,sans-serif; font-size:13px;">
-      <p style="margin:0 0 4px; font-size:16px; font-weight:700; color:#e2e8f0; letter-spacing:0.5px;">Leading Edge</p>
-      <p style="margin:0 0 3px; font-size:12px;">H-78/1, Bir Uttom Ziaur Rahman Shorok, Moakhali, Dhaka-1212</p>
-      <p style="margin:0 0 3px; font-size:12px;">&#128222; 01759-993888</p>
-      <p style="margin:0 0 16px; font-size:12px;">
+    <div class="email-footer" style="background-color:#0f172a; padding:32px 24px 24px; text-align:center; color:#94a3b8; font-family:'Segoe UI',Arial,sans-serif; font-size:13px;">
+      <p style="margin:0 0 5px; font-size:17px; font-weight:700; color:#f1f5f9; letter-spacing:0.5px;">Leading Edge</p>
+      <p style="margin:0 0 3px; font-size:12px; color:#94a3b8;">
+        <a href="https://maps.app.goo.gl/FaFjLs4K25RE3wip7" style="color:#93c5fd; text-decoration:none;">
+          H-78/1, Bir Uttom Ziaur Rahman Shorok, Moakhali, Dhaka-1212
+        </a>
+      </p>
+      <p style="margin:0 0 3px; font-size:12px; color:#94a3b8;">
+        <a href="tel:01759993888" style="color:#94a3b8; text-decoration:none;">&#128222; 01759-993888</a>
+      </p>
+      <p style="margin:0 0 20px; font-size:12px;">
         <a href="https://leadingedge.com.bd" style="color:#93c5fd; text-decoration:none;">leadingedge.com.bd</a>
-        &nbsp;|&nbsp;
+        &nbsp;&bull;&nbsp;
         <a href="mailto:sales@leadingedge.com.bd" style="color:#93c5fd; text-decoration:none;">sales@leadingedge.com.bd</a>
       </p>
-      <div style="margin:0 0 20px;">
-        <a href="https://www.facebook.com/leadingedge.bd" style="${SOCIAL_BTN}" title="Facebook">${FB_SVG}</a>
-        <a href="https://www.instagram.com/leadingedgebd/" style="${SOCIAL_BTN}" title="Instagram">${IG_SVG}</a>
-        <a href="https://x.com/Leadingedge_bd" style="${SOCIAL_BTN}" title="X">${X_SVG}</a>
-        <a href="https://www.linkedin.com/company/107868953/" style="${SOCIAL_BTN}" title="LinkedIn">${LI_SVG}</a>
+      <div style="margin:0 0 20px; font-size:0;">
+        ${socialIcon('https://www.facebook.com/leadingedge.bd', FB_SVG, 'Facebook')}
+        ${socialIcon('https://www.instagram.com/leadingedgebd/', IG_SVG, 'Instagram')}
+        ${socialIcon('https://x.com/Leadingedge_bd', X_SVG, 'X / Twitter')}
+        ${socialIcon('https://www.linkedin.com/company/107868953/', LI_SVG, 'LinkedIn')}
+        ${socialIcon('https://maps.app.goo.gl/FaFjLs4K25RE3wip7', MAP_SVG, 'Find us on Maps')}
       </div>
       <div style="font-size:11px; color:#475569; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; margin-top:4px;">
         &copy; ${new Date().getFullYear()} Leading Edge. All rights reserved.
