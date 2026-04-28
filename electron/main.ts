@@ -74,11 +74,59 @@ ipcMain.on('save-settings', (event, settings) => {
   saveSmtpSettings(settings);
 });
 
+ipcMain.handle('check-for-updates', async () => {
+  if (!app.isPackaged) {
+    return { success: false, message: 'Update checks are available in packaged releases only.' };
+  }
+
+  try {
+    await autoUpdater.checkForUpdatesAndNotify();
+    return {
+      success: true,
+      message: 'Checked for updates. If a newer version exists, it will download and prompt for install.'
+    };
+  } catch (err: any) {
+    return { success: false, message: err?.message || 'Failed to check for updates.' };
+  }
+});
+
 ipcMain.handle('get-designs', () => getAllDesigns());
 ipcMain.handle('get-design', (_, id) => getDesignById(id));
 ipcMain.on('save-design', (event, design) => saveDesign(design));
 ipcMain.on('update-design', (event, id, design) => updateDesign(id, design));
 ipcMain.on('delete-design', (event, id) => deleteDesign(id));
+
+ipcMain.handle('send-test-email', async (_, { to, subject, html }) => {
+  try {
+    const currentSettings: any = getSmtpSettings();
+    if (!currentSettings || !currentSettings.host) {
+      return { success: false, error: 'SMTP Settings missing. Please save them in Settings.' };
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: currentSettings.host,
+      port: parseInt(currentSettings.port),
+      secure: parseInt(currentSettings.port) === 465,
+      auth: {
+        user: currentSettings.username,
+        pass: currentSettings.password,
+      },
+    });
+
+    await transporter.verify();
+
+    await transporter.sendMail({
+      from: `"${currentSettings.from_name}" <${currentSettings.from_email || currentSettings.username}>`,
+      to,
+      subject,
+      html,
+    });
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+});
 
 ipcMain.handle('get-history', () => getAllCampaigns());
 ipcMain.handle('get-history-records', (_, id) => getCampaignRecords(id));

@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Settings
   getSettings: () => ipcRenderer.invoke('get-settings'),
   saveSettings: (settings: any) => ipcRenderer.send('save-settings', settings),
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
 
   // Designs
   getDesigns: () => ipcRenderer.invoke('get-designs'),
@@ -13,6 +14,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveDesign: (design: any) => ipcRenderer.send('save-design', design),
   updateDesign: (id: number, design: any) => ipcRenderer.send('update-design', id, design),
   deleteDesign: (id: number) => ipcRenderer.send('delete-design', id),
+  sendTestEmail: (payload: any) => ipcRenderer.invoke('send-test-email', payload),
 
   // History
   getHistory: () => ipcRenderer.invoke('get-history'),

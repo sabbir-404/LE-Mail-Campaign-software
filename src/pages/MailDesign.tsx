@@ -10,13 +10,11 @@ import {
   Image,
   Link2,
   Monitor,
-  Palette,
   Plus,
   Save,
   Send,
   Smartphone,
   Sparkles,
-  Tablet,
   Trash2,
   Type,
   Upload,
@@ -33,7 +31,8 @@ const LI_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" v
 const WA_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#e2e8f0" style="display:block;"><path d="M12.04 2C6.58 2 2.15 6.29 2.15 11.58c0 1.88.57 3.63 1.55 5.12L2 22l5.51-1.67a10 10 0 0 0 4.53 1.07c5.46 0 9.89-4.29 9.89-9.58S17.5 2 12.04 2zm0 17.23c-1.5 0-2.92-.38-4.16-1.06l-.3-.17-3.27.99 1-3.19-.2-.32a8.04 8.04 0 0 1-1.22-4.31c0-4.44 3.75-8.05 8.35-8.05 4.59 0 8.34 3.61 8.34 8.05 0 4.44-3.75 8.06-8.34 8.06zm4.44-5.71c-.24-.12-1.42-.69-1.64-.77-.22-.08-.38-.12-.54.12-.16.24-.62.77-.76.93-.14.16-.28.18-.52.06-.24-.12-1.02-.36-1.94-1.15-.72-.64-1.2-1.43-1.34-1.67-.14-.24-.02-.37.1-.49.1-.1.24-.26.36-.39.12-.13.16-.22.24-.37.08-.16.04-.29-.02-.41-.06-.12-.54-1.31-.74-1.8-.2-.48-.41-.42-.54-.43h-.46c-.16 0-.41.06-.62.29-.22.24-.84.82-.84 2.01s.86 2.34.98 2.5c.12.16 1.7 2.65 4.12 3.72.58.25 1.03.4 1.38.51.58.18 1.1.16 1.52.09.46-.07 1.42-.58 1.62-1.14.2-.56.2-1.05.14-1.15-.06-.1-.22-.16-.46-.28z"/></svg>`;
 
 type EditorMode = 'builder' | 'code';
-type PreviewMode = 'desktop' | 'tablet' | 'mobile';
+type PreviewMode = 'desktop' | 'mobile';
+type PreviewTheme = 'light' | 'dark' | 'auto';
 type TextAlign = 'left' | 'center' | 'right';
 type HeaderStyle = 'classic' | 'centered' | 'split';
 type FooterStyle = 'classic' | 'simple' | 'dark';
@@ -565,6 +564,7 @@ const MailDesign: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
+  const [previewTheme, setPreviewTheme] = useState<PreviewTheme>('light');
   const [draggedBlockId, setDraggedBlockId] = useState<string | null>(null);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [designFilter, setDesignFilter] = useState<'all' | 'templates' | 'designs'>('all');
@@ -572,7 +572,6 @@ const MailDesign: React.FC = () => {
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [formData, setFormData] = useState<DesignForm>(DEFAULT_FORMS);
   const [blocks, setBlocks] = useState<Block[]>(buildDefaultBlocks(DEFAULT_FORMS.templateKey));
-  const [showTutorial, setShowTutorial] = useState(false);
 
   const api = () => (window as any).electronAPI;
 
@@ -770,10 +769,143 @@ const MailDesign: React.FC = () => {
     }
   };
 
-  const selectedBlock = blocks.find(block => block.id === selectedBlockId) || null;
   const previewHtml = formData.editorMode === 'builder'
     ? buildEmailHtml(buildBuilderBodyHtml(formData, blocks), formData)
     : buildEmailHtml(formData.body_html, formData);
+
+  const previewCss = previewTheme === 'dark'
+    ? '<style>html,body{background:#020617!important;color:#e2e8f0!important;} .email-shell{background:#020617!important;} .email-card{background:#111827!important;box-shadow:0 8px 26px rgba(0,0,0,0.45)!important;} .email-body{color:#e2e8f0!important;} a{color:#93c5fd!important;}</style>'
+    : previewTheme === 'auto'
+      ? '<style>@media (prefers-color-scheme: dark){html,body{background:#020617!important;color:#e2e8f0!important;} .email-shell{background:#020617!important;} .email-card{background:#111827!important;box-shadow:0 8px 26px rgba(0,0,0,0.45)!important;} .email-body{color:#e2e8f0!important;} a{color:#93c5fd!important;}}</style>'
+      : '';
+
+  const themedPreviewHtml = previewHtml.includes('</head>')
+    ? previewHtml.replace('</head>', `${previewCss}</head>`)
+    : `${previewCss}${previewHtml}`;
+
+  const renderBlockEditor = (block: Block) => (
+    <div className="mt-3 rounded-xl border border-orange-200 bg-white p-3 space-y-3" onClick={event => event.stopPropagation()}>
+      <div className="text-xs font-semibold uppercase tracking-wide text-orange-700">Edit This Section</div>
+
+      {block.type === 'hero' && (
+        <>
+          <div>
+            <label className="text-xs font-semibold text-stone-600 mb-1 block">Badge</label>
+            <input value={block.badge} onChange={event => updateBlock(block.id, current => ({ ...(current as HeroBlock), badge: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-stone-600 mb-1 block">Headline</label>
+            <input value={block.title} onChange={event => updateBlock(block.id, current => ({ ...(current as HeroBlock), title: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-stone-600 mb-1 block">Short Description</label>
+            <textarea value={block.description} onChange={event => updateBlock(block.id, current => ({ ...(current as HeroBlock), description: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm min-h-24" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-stone-600 mb-1 block">Button Text</label>
+              <input value={block.ctaText} onChange={event => updateBlock(block.id, current => ({ ...(current as HeroBlock), ctaText: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-stone-600 mb-1 block">Button Link</label>
+              <input value={block.ctaLink} onChange={event => updateBlock(block.id, current => ({ ...(current as HeroBlock), ctaLink: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
+            </div>
+          </div>
+        </>
+      )}
+
+      {block.type === 'text' && (
+        <>
+          <div>
+            <label className="text-xs font-semibold text-stone-600 mb-1 block">Heading</label>
+            <input value={block.heading} onChange={event => updateBlock(block.id, current => ({ ...(current as TextBlock), heading: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-stone-600 mb-1 block">Content</label>
+            <textarea value={block.content} onChange={event => updateBlock(block.id, current => ({ ...(current as TextBlock), content: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm min-h-28" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-stone-600 mb-1 block">Alignment</label>
+            <select value={block.align} onChange={event => updateBlock(block.id, current => ({ ...(current as TextBlock), align: event.target.value as TextAlign }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm">
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+          </div>
+        </>
+      )}
+
+      {block.type === 'image' && (
+        <>
+          <div>
+            <label className="text-xs font-semibold text-stone-600 mb-1 block">Image URL</label>
+            <input value={block.imageUrl} onChange={event => updateBlock(block.id, current => ({ ...(current as ImageBlock), imageUrl: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-stone-600 mb-1 block">Caption</label>
+            <textarea value={block.caption} onChange={event => updateBlock(block.id, current => ({ ...(current as ImageBlock), caption: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm min-h-20" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-stone-600 mb-1 block">Link</label>
+            <input value={block.link} onChange={event => updateBlock(block.id, current => ({ ...(current as ImageBlock), link: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+        </>
+      )}
+
+      {block.type === 'button' && (
+        <>
+          <div>
+            <label className="text-xs font-semibold text-stone-600 mb-1 block">Button Text</label>
+            <input value={block.text} onChange={event => updateBlock(block.id, current => ({ ...(current as ButtonBlock), text: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-stone-600 mb-1 block">Button Link</label>
+            <input value={block.link} onChange={event => updateBlock(block.id, current => ({ ...(current as ButtonBlock), link: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+        </>
+      )}
+
+      {block.type === 'grid' && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-stone-600 mb-1 block">Title</label>
+              <input value={block.title} onChange={event => updateBlock(block.id, current => ({ ...(current as GridBlock), title: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-stone-600 mb-1 block">Columns</label>
+              <select value={block.columns} onChange={event => updateBlock(block.id, current => ({ ...(current as GridBlock), columns: Number(event.target.value) as 2 | 3 }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm">
+                <option value={2}>2 Columns</option>
+                <option value={3}>3 Columns</option>
+              </select>
+            </div>
+          </div>
+          {(block as GridBlock).items.map((item, itemIndex) => (
+            <div key={itemIndex} className="rounded-lg border border-stone-200 p-3 bg-stone-50 space-y-2">
+              <div className="text-xs font-semibold uppercase tracking-wide text-stone-500">Item {itemIndex + 1}</div>
+              <input value={item.title} onChange={event => updateBlock(block.id, current => {
+                const next = { ...(current as GridBlock) };
+                next.items[itemIndex] = { ...next.items[itemIndex], title: event.target.value };
+                return next;
+              })} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" placeholder="Title" />
+              <textarea value={item.description} onChange={event => updateBlock(block.id, current => {
+                const next = { ...(current as GridBlock) };
+                next.items[itemIndex] = { ...next.items[itemIndex], description: event.target.value };
+                return next;
+              })} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm min-h-20" placeholder="Description" />
+            </div>
+          ))}
+        </>
+      )}
+
+      {block.type === 'divider' && (
+        <div>
+          <label className="text-xs font-semibold text-stone-600 mb-1 block">Divider Color</label>
+          <input type="color" value={block.color} onChange={event => updateBlock(block.id, current => ({ ...(current as DividerBlock), color: event.target.value }))} className="w-full h-10 bg-white border border-stone-300 rounded-lg px-2 py-1" />
+        </div>
+      )}
+    </div>
+  );
 
   const visibleDesigns = designs.filter(design => {
     if (designFilter === 'templates') return design.is_template === 1;
@@ -860,16 +992,14 @@ const MailDesign: React.FC = () => {
                 <Send size={14} />
                 Test Email
               </button>
-            <button onClick={() => setShowTutorial(true)} className="ml-2 flex items-center gap-1 px-3 py-2 border rounded-lg text-sm text-stone-700 hover:bg-stone-50 transition-colors">
-              <Palette size={14} />
-              Tutorial
-            </button>
             </div>
             {showPreview && (
-              <div className="flex items-center bg-stone-100 p-1 rounded-lg border border-stone-200 mr-1">
+              <div className="flex items-center bg-stone-100 p-1 rounded-lg border border-stone-200 mr-1 flex-wrap gap-1">
                 <button onClick={() => setPreviewMode('desktop')} className={clsx('px-2.5 py-1 text-xs rounded font-medium transition-colors flex items-center gap-1', previewMode === 'desktop' ? 'bg-white shadow-sm text-stone-800' : 'text-stone-500 hover:text-stone-700')}><Monitor size={13} />Desktop</button>
-                <button onClick={() => setPreviewMode('tablet')} className={clsx('px-2.5 py-1 text-xs rounded font-medium transition-colors flex items-center gap-1', previewMode === 'tablet' ? 'bg-white shadow-sm text-stone-800' : 'text-stone-500 hover:text-stone-700')}><Tablet size={13} />Tablet</button>
                 <button onClick={() => setPreviewMode('mobile')} className={clsx('px-2.5 py-1 text-xs rounded font-medium transition-colors flex items-center gap-1', previewMode === 'mobile' ? 'bg-white shadow-sm text-stone-800' : 'text-stone-500 hover:text-stone-700')}><Smartphone size={13} />Mobile</button>
+                <button onClick={() => setPreviewTheme('light')} className={clsx('px-2.5 py-1 text-xs rounded font-medium transition-colors', previewTheme === 'light' ? 'bg-white shadow-sm text-stone-800' : 'text-stone-500 hover:text-stone-700')}>Light</button>
+                <button onClick={() => setPreviewTheme('dark')} className={clsx('px-2.5 py-1 text-xs rounded font-medium transition-colors', previewTheme === 'dark' ? 'bg-white shadow-sm text-stone-800' : 'text-stone-500 hover:text-stone-700')}>Dark</button>
+                <button onClick={() => setPreviewTheme('auto')} className={clsx('px-2.5 py-1 text-xs rounded font-medium transition-colors', previewTheme === 'auto' ? 'bg-white shadow-sm text-stone-800' : 'text-stone-500 hover:text-stone-700')}>Auto Phone Mode</button>
               </div>
             )}
             <button onClick={() => setShowPreview(prev => !prev)} className={clsx('flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg border transition-all font-medium', showPreview ? 'bg-orange-100 text-orange-700 border-orange-300 shadow-sm' : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50')}>
@@ -1007,10 +1137,10 @@ const MailDesign: React.FC = () => {
               <div
                 className={clsx(
                   'transition-all duration-300 ease-in-out bg-white overflow-hidden shadow-xl',
-                  previewMode === 'mobile' ? 'w-[375px] max-w-full h-[812px] rounded-[36px] my-6 border-[12px] border-stone-800 ring-1 ring-stone-200/50 relative' : previewMode === 'tablet' ? 'w-[768px] max-w-[calc(100%-2rem)] h-[1024px] rounded-[28px] my-6 border-[10px] border-stone-800 ring-1 ring-stone-200/50' : 'w-full h-full'
+                  previewMode === 'mobile' ? 'w-[375px] max-w-full h-[812px] rounded-[36px] my-6 border-[12px] border-stone-800 ring-1 ring-stone-200/50 relative' : 'w-full h-full'
                 )}
               >
-                <iframe srcDoc={previewHtml} className="w-full h-full border-0 bg-white" sandbox="allow-same-origin" title="Email Preview" />
+                <iframe srcDoc={themedPreviewHtml} className="w-full h-full border-0 bg-white" sandbox="allow-same-origin" title="Email Preview" />
               </div>
             </div>
           ) : formData.editorMode === 'code' ? (
@@ -1022,13 +1152,13 @@ const MailDesign: React.FC = () => {
               placeholder="<div>Write your HTML email body here...</div>"
             />
           ) : (
-            <div className="h-full grid grid-cols-1 2xl:grid-cols-[1fr_340px] gap-4 p-4 min-h-0">
+            <div className="h-full grid grid-cols-1 gap-4 p-4 min-h-0">
               <div className="min-w-0 min-h-0 flex flex-col gap-4">
                 <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm">
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <div className="text-sm font-semibold text-stone-900">Builder Canvas</div>
-                      <div className="text-xs text-stone-500">Arrange blocks, then preview or send a test email.</div>
+                      <div className="text-xs text-stone-500">Arrange blocks, then edit each selected section directly below it.</div>
                     </div>
                     <button onClick={() => setSelectedBlockId(null)} className="text-xs px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-50">Clear selection</button>
                   </div>
@@ -1073,6 +1203,7 @@ const MailDesign: React.FC = () => {
                                 {block.type === 'grid' && (block as GridBlock).title}
                                 {block.type === 'divider' && 'Divider line'}
                               </div>
+                              {isSelected && renderBlockEditor(block)}
                             </div>
                           </div>
                         </div>
@@ -1085,261 +1216,31 @@ const MailDesign: React.FC = () => {
                   <div className="px-4 py-3 border-b border-stone-100 bg-stone-50 flex items-center justify-between">
                     <div>
                       <div className="text-sm font-semibold text-stone-900">Email Body Preview</div>
-                      <div className="text-xs text-stone-500">The generated HTML is what gets sent to recipients.</div>
+                      <div className="text-xs text-stone-500">Preview desktop/mobile and Light, Dark, or Auto phone mode.</div>
                     </div>
-                    <button onClick={() => setShowPreview(true)} className="text-xs px-3 py-1.5 rounded-lg bg-orange-100 text-orange-700 border border-orange-200 hover:bg-orange-200">Open Preview</button>
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                      <button onClick={() => setPreviewMode('desktop')} className={clsx('text-xs px-3 py-1.5 rounded-lg border', previewMode === 'desktop' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-white text-stone-600 border-stone-200')}>Desktop</button>
+                      <button onClick={() => setPreviewMode('mobile')} className={clsx('text-xs px-3 py-1.5 rounded-lg border', previewMode === 'mobile' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-white text-stone-600 border-stone-200')}>Mobile</button>
+                      <select value={previewTheme} onChange={event => setPreviewTheme(event.target.value as PreviewTheme)} className="text-xs px-2.5 py-1.5 rounded-lg border border-stone-200 bg-white text-stone-700">
+                        <option value="light">Light Mode</option>
+                        <option value="dark">Dark Mode</option>
+                        <option value="auto">Auto (Phone System)</option>
+                      </select>
+                      <button onClick={() => setShowPreview(true)} className="text-xs px-3 py-1.5 rounded-lg bg-orange-100 text-orange-700 border border-orange-200 hover:bg-orange-200">Open Preview</button>
+                    </div>
                   </div>
-                  <div className="p-4 min-h-[280px] bg-stone-50">
-                    <iframe srcDoc={previewHtml} className="w-full h-[360px] border border-stone-200 rounded-xl bg-white" sandbox="allow-same-origin" title="Inline Email Preview" />
+                  <div className="p-4 min-h-[280px] bg-stone-50 flex items-center justify-center">
+                    <div className={clsx('w-full', previewMode === 'mobile' && 'max-w-[380px] h-[640px] border-[8px] border-stone-800 rounded-[28px] overflow-hidden bg-white')}>
+                      <iframe srcDoc={themedPreviewHtml} className={clsx('w-full border border-stone-200 rounded-xl bg-white', previewMode === 'mobile' ? 'h-full border-0 rounded-none' : 'h-[360px]')} sandbox="allow-same-origin" title="Inline Email Preview" />
+                    </div>
                   </div>
                 </div>
               </div>
-
-              <aside className="min-h-0 bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm">
-                <div className="px-4 py-3 border-b border-stone-100 bg-stone-50">
-                  <div className="text-sm font-semibold text-stone-900">Inspector</div>
-                  <div className="text-xs text-stone-500">Edit the selected block or add personalization tokens.</div>
-                </div>
-                <div className="p-4 space-y-4 max-h-[calc(100vh-320px)] overflow-y-auto">
-                  {!selectedBlock ? (
-                    <div className="text-sm text-stone-500 leading-7">
-                      Select a block to edit its content. If you need raw HTML, switch to code mode above.
-                    </div>
-                  ) : (
-                    <>
-                      {selectedBlock.type === 'hero' && (
-                        <>
-                          <div>
-                            <label className="text-xs font-semibold text-stone-600 mb-1 block">Badge</label>
-                            <input value={(selectedBlock as HeroBlock).badge} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as HeroBlock), badge: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-stone-600 mb-1 block">Headline</label>
-                            <input value={(selectedBlock as HeroBlock).title} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as HeroBlock), title: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-stone-600 mb-1 block">Short Description</label>
-                            <textarea value={(selectedBlock as HeroBlock).description} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as HeroBlock), description: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm min-h-28" />
-                          </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <label className="text-xs font-semibold text-stone-600 mb-1 block">Button Text</label>
-                              <input value={(selectedBlock as HeroBlock).ctaText} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as HeroBlock), ctaText: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
-                            </div>
-                            <div>
-                              <label className="text-xs font-semibold text-stone-600 mb-1 block">Button Link</label>
-                              <input value={(selectedBlock as HeroBlock).ctaLink} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as HeroBlock), ctaLink: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
-                            </div>
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-stone-600 mb-1 block">Hero Image URL</label>
-                            <div className="flex gap-2">
-                              <input value={(selectedBlock as HeroBlock).imageUrl} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as HeroBlock), imageUrl: event.target.value }))} className="flex-1 border border-stone-300 rounded-lg px-3 py-2 text-sm" />
-                              <label className="px-3 py-2 text-sm rounded-lg bg-stone-100 border border-stone-200 cursor-pointer hover:bg-stone-200 transition-colors flex items-center gap-1.5">
-                                <Upload size={14} />
-                                <input type="file" accept="image/*" className="hidden" onChange={event => handleFileUpload(event, dataUrl => updateBlock(selectedBlock.id, block => ({ ...(block as HeroBlock), imageUrl: dataUrl })))} />
-                              </label>
-                            </div>
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-stone-600 mb-1 block">Layout</label>
-                            <select value={(selectedBlock as HeroBlock).layout} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as HeroBlock), layout: event.target.value as HeroBlock['layout'] }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm">
-                              <option value="center">Centered</option>
-                              <option value="split-left">Image Right / Text Left</option>
-                              <option value="split-right">Image Left / Text Right</option>
-                            </select>
-                          </div>
-                        </>
-                      )}
-
-                      {selectedBlock.type === 'text' && (
-                        <>
-                          <div>
-                            <label className="text-xs font-semibold text-stone-600 mb-1 block">Heading</label>
-                            <input value={(selectedBlock as TextBlock).heading} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as TextBlock), heading: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-stone-600 mb-1 block">Content</label>
-                            <textarea value={(selectedBlock as TextBlock).content} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as TextBlock), content: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm min-h-40" />
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-stone-600 mb-1 block">Alignment</label>
-                            <select value={(selectedBlock as TextBlock).align} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as TextBlock), align: event.target.value as TextAlign }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm">
-                              <option value="left">Left</option>
-                              <option value="center">Center</option>
-                              <option value="right">Right</option>
-                            </select>
-                          </div>
-                          <div className="rounded-xl border border-stone-200 bg-stone-50 p-3 text-xs text-stone-600">
-                            Quick personalization tokens: <button className="font-semibold text-orange-600" onClick={() => updateBlock(selectedBlock.id, block => ({ ...(block as TextBlock), content: `${(block as TextBlock).content} {{first_name}}` }))}>first name</button>, <button className="font-semibold text-orange-600" onClick={() => updateBlock(selectedBlock.id, block => ({ ...(block as TextBlock), content: `${(block as TextBlock).content} {{city}}` }))}>city</button>, <button className="font-semibold text-orange-600" onClick={() => updateBlock(selectedBlock.id, block => ({ ...(block as TextBlock), content: `${(block as TextBlock).content} {{purchase_category}}` }))}>purchase category</button>.
-                          </div>
-                        </>
-                      )}
-
-                      {selectedBlock.type === 'image' && (
-                        <>
-                          <div>
-                            <label className="text-xs font-semibold text-stone-600 mb-1 block">Image URL</label>
-                            <div className="flex gap-2">
-                              <input value={(selectedBlock as ImageBlock).imageUrl} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as ImageBlock), imageUrl: event.target.value }))} className="flex-1 border border-stone-300 rounded-lg px-3 py-2 text-sm" />
-                              <label className="px-3 py-2 text-sm rounded-lg bg-stone-100 border border-stone-200 cursor-pointer hover:bg-stone-200 transition-colors flex items-center gap-1.5">
-                                <Upload size={14} />
-                                <input type="file" accept="image/*" className="hidden" onChange={event => handleFileUpload(event, dataUrl => updateBlock(selectedBlock.id, block => ({ ...(block as ImageBlock), imageUrl: dataUrl })))} />
-                              </label>
-                            </div>
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-stone-600 mb-1 block">Image Caption</label>
-                            <textarea value={(selectedBlock as ImageBlock).caption} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as ImageBlock), caption: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm min-h-24" />
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-stone-600 mb-1 block">Image Link</label>
-                            <input value={(selectedBlock as ImageBlock).link} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as ImageBlock), link: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
-                          </div>
-                        </>
-                      )}
-
-                      {selectedBlock.type === 'button' && (
-                        <>
-                          <div>
-                            <label className="text-xs font-semibold text-stone-600 mb-1 block">Button Text</label>
-                            <input value={(selectedBlock as ButtonBlock).text} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as ButtonBlock), text: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-stone-600 mb-1 block">Button Link</label>
-                            <input value={(selectedBlock as ButtonBlock).link} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as ButtonBlock), link: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-stone-600 mb-1 block">Alignment</label>
-                            <select value={(selectedBlock as ButtonBlock).align} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as ButtonBlock), align: event.target.value as TextAlign }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm">
-                              <option value="left">Left</option>
-                              <option value="center">Center</option>
-                              <option value="right">Right</option>
-                            </select>
-                          </div>
-                        </>
-                      )}
-
-                      {selectedBlock.type === 'grid' && (
-                        <>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <label className="text-xs font-semibold text-stone-600 mb-1 block">Title</label>
-                              <input value={(selectedBlock as GridBlock).title} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as GridBlock), title: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
-                            </div>
-                            <div>
-                              <label className="text-xs font-semibold text-stone-600 mb-1 block">Columns</label>
-                              <select value={(selectedBlock as GridBlock).columns} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as GridBlock), columns: Number(event.target.value) as 2 | 3 }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm">
-                                <option value={2}>2 Columns</option>
-                                <option value={3}>3 Columns</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-stone-600 mb-1 block">Subtitle</label>
-                            <textarea value={(selectedBlock as GridBlock).subtitle} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as GridBlock), subtitle: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm min-h-20" />
-                          </div>
-                          <div className="space-y-3">
-                            {(selectedBlock as GridBlock).items.map((item, itemIndex) => (
-                              <div key={itemIndex} className="rounded-xl border border-stone-200 p-3 bg-stone-50 space-y-2">
-                                <div className="text-xs font-semibold uppercase tracking-wide text-stone-500">Item {itemIndex + 1}</div>
-                                <input value={item.title} onChange={event => updateBlock(selectedBlock.id, block => {
-                                  const next = { ...(block as GridBlock) };
-                                  next.items[itemIndex] = { ...next.items[itemIndex], title: event.target.value };
-                                  return next;
-                                })} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" placeholder="Title" />
-                                <textarea value={item.description} onChange={event => updateBlock(selectedBlock.id, block => {
-                                  const next = { ...(block as GridBlock) };
-                                  next.items[itemIndex] = { ...next.items[itemIndex], description: event.target.value };
-                                  return next;
-                                })} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm min-h-20" placeholder="Description" />
-                                <div className="grid grid-cols-2 gap-2">
-                                  <input value={item.price} onChange={event => updateBlock(selectedBlock.id, block => {
-                                    const next = { ...(block as GridBlock) };
-                                    next.items[itemIndex] = { ...next.items[itemIndex], price: event.target.value };
-                                    return next;
-                                  })} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" placeholder="Price" />
-                                  <input value={item.ctaText} onChange={event => updateBlock(selectedBlock.id, block => {
-                                    const next = { ...(block as GridBlock) };
-                                    next.items[itemIndex] = { ...next.items[itemIndex], ctaText: event.target.value };
-                                    return next;
-                                  })} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" placeholder="Button Text" />
-                                </div>
-                                <input value={item.link} onChange={event => updateBlock(selectedBlock.id, block => {
-                                  const next = { ...(block as GridBlock) };
-                                  next.items[itemIndex] = { ...next.items[itemIndex], link: event.target.value };
-                                  return next;
-                                })} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" placeholder="Link" />
-                                <div className="flex gap-2">
-                                  <input value={item.imageUrl} onChange={event => updateBlock(selectedBlock.id, block => {
-                                    const next = { ...(block as GridBlock) };
-                                    next.items[itemIndex] = { ...next.items[itemIndex], imageUrl: event.target.value };
-                                    return next;
-                                  })} className="flex-1 border border-stone-300 rounded-lg px-3 py-2 text-sm" placeholder="Image URL" />
-                                  <label className="px-3 py-2 text-sm rounded-lg bg-white border border-stone-200 cursor-pointer hover:bg-stone-200 transition-colors flex items-center gap-1.5">
-                                    <Upload size={14} />
-                                    <input type="file" accept="image/*" className="hidden" onChange={event => handleFileUpload(event, dataUrl => updateBlock(selectedBlock.id, block => {
-                                      const next = { ...(block as GridBlock) };
-                                      next.items[itemIndex] = { ...next.items[itemIndex], imageUrl: dataUrl };
-                                      return next;
-                                    }))} />
-                                  </label>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </>
-                      )}
-
-                      {selectedBlock.type === 'divider' && (
-                        <div>
-                          <label className="text-xs font-semibold text-stone-600 mb-1 block">Divider Color</label>
-                          <input type="color" value={(selectedBlock as DividerBlock).color} onChange={event => updateBlock(selectedBlock.id, block => ({ ...(block as DividerBlock), color: event.target.value }))} className="w-full h-10 bg-white border border-stone-300 rounded-lg px-2 py-1" />
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              </aside>
             </div>
           )}
         </div>
       </div>
       </div>
-
-      {showTutorial && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowTutorial(false)} />
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-auto p-6 z-10">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-stone-900">Mail Builder Tutorial</h3>
-                <p className="text-xs text-stone-500 mt-1">Quick tour of the Template Library, Builder Canvas, Inspector, and Preview.</p>
-              </div>
-              <button onClick={() => setShowTutorial(false)} className="text-sm text-stone-500">Close</button>
-            </div>
-
-            <div className="space-y-4 text-sm text-stone-700">
-              <ol className="list-decimal list-inside space-y-2">
-                <li><strong>Template Library:</strong> Choose a starting layout or click the + button to create a blank design.</li>
-                <li><strong>Builder Canvas:</strong> Add blocks using the "Add blocks" toolbar. Drag to reorder or use the up/down buttons.</li>
-                <li><strong>Inspector:</strong> Select a block to edit its content, images, buttons, and layout options here.</li>
-                <li><strong>Preview:</strong> Toggle Preview to view desktop/tablet/mobile renderings. Use Test Email to send a sample.</li>
-                <li><strong>Save:</strong> Click "Save" to store the design, or "Save as Template" to reuse it later.</li>
-                <li><strong>Code Mode:</strong> Switch to Code mode when you need raw HTML editing or to paste third-party templates.</li>
-              </ol>
-
-              <div className="rounded-lg bg-stone-50 p-3 text-xs text-stone-600">
-                Tip: Keep hero headlines short, use clear CTAs, and test on mobile preview before sending.
-              </div>
-
-              <div className="mt-4 flex justify-end">
-                <button onClick={() => setShowTutorial(false)} className="px-4 py-2 bg-orange-500 text-white rounded-lg">Got it</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
