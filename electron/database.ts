@@ -16,17 +16,25 @@ export function initDatabase() {
       name TEXT NOT NULL,
       subject TEXT NOT NULL DEFAULT '',
       body_html TEXT NOT NULL DEFAULT '',
+      builder_json TEXT NOT NULL DEFAULT '',
       use_header INTEGER NOT NULL DEFAULT 1,
       use_footer INTEGER NOT NULL DEFAULT 1,
       email_theme TEXT NOT NULL DEFAULT 'light',
+      is_template INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `);
 
-  // Migrate existing DBs — add email_theme if missing
+  // Migrate existing DBs — add new design columns if missing
   try {
     db.exec(`ALTER TABLE mail_designs ADD COLUMN email_theme TEXT NOT NULL DEFAULT 'light';`);
+  } catch (_) { /* Column already exists, skip */ }
+  try {
+    db.exec(`ALTER TABLE mail_designs ADD COLUMN builder_json TEXT NOT NULL DEFAULT '';`);
+  } catch (_) { /* Column already exists, skip */ }
+  try {
+    db.exec(`ALTER TABLE mail_designs ADD COLUMN is_template INTEGER NOT NULL DEFAULT 0;`);
   } catch (_) { /* Column already exists, skip */ }
 
   // Campaign history table
@@ -131,23 +139,23 @@ export function getDesignById(id: number) {
 
 export function saveDesign(design: {
   name: string; subject: string; body_html: string;
-  use_header: number; use_footer: number; email_theme: string;
+  builder_json?: string; use_header: number; use_footer: number; email_theme: string; is_template?: number;
 }) {
   const result = db.prepare(`
-    INSERT INTO mail_designs (name, subject, body_html, use_header, use_footer, email_theme)
-    VALUES (@name, @subject, @body_html, @use_header, @use_footer, @email_theme)
+    INSERT INTO mail_designs (name, subject, body_html, builder_json, use_header, use_footer, email_theme, is_template)
+    VALUES (@name, @subject, @body_html, @builder_json, @use_header, @use_footer, @email_theme, @is_template)
   `).run(design);
   return result.lastInsertRowid;
 }
 
 export function updateDesign(id: number, design: {
   name: string; subject: string; body_html: string;
-  use_header: number; use_footer: number; email_theme: string;
+  builder_json?: string; use_header: number; use_footer: number; email_theme: string; is_template?: number;
 }) {
   db.prepare(`
     UPDATE mail_designs SET
-      name = @name, subject = @subject, body_html = @body_html,
-      use_header = @use_header, use_footer = @use_footer, email_theme = @email_theme,
+      name = @name, subject = @subject, body_html = @body_html, builder_json = @builder_json,
+      use_header = @use_header, use_footer = @use_footer, email_theme = @email_theme, is_template = @is_template,
       updated_at = datetime('now')
     WHERE id = ${id}
   `).run(design);
