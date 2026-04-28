@@ -92,6 +92,18 @@ const Settings: React.FC = () => {
         <p className="text-xs text-orange-700/70 mt-3 font-medium">This app only uses SMTP for sending. Enter your Hostinger email credentials below.</p>
       </div>
 
+      <div className="mb-6 bg-sky-50 border border-sky-100 rounded-xl p-5 shadow-sm">
+        <h3 className="text-sm font-semibold text-sky-800 mb-3">✉️ How to create a mail</h3>
+        <ol className="list-decimal list-inside text-sm text-stone-700 space-y-2">
+          <li>Open the Mail Design page and click <strong>New Design</strong> or pick a template from the Template Library.</li>
+          <li>Use the <strong>Add blocks</strong> toolbar to insert hero, text, image, button, grid, or divider sections.</li>
+          <li>Select a block on the Builder Canvas to edit its content in the Inspector panel.</li>
+          <li>Preview the email using <strong>Preview</strong> (desktop/tablet/mobile) and send a sample via <strong>Test Email</strong>.</li>
+          <li>When satisfied, click <strong>Save</strong> or <strong>Save as Template</strong> to reuse the layout later.</li>
+        </ol>
+        <p className="text-xs text-stone-500 mt-3">Tip: Switch to <strong>Code</strong> mode for manual HTML edits or to paste third-party templates.</p>
+      </div>
+
       <div className="bg-white border border-stone-200 shadow-sm rounded-xl p-8 backdrop-blur-sm">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">

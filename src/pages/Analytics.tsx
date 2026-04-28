@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LineChart, BarChart, ArrowUpRight, Clock, Users, Mail, RefreshCw, Eye } from 'lucide-react';
+import { LineChart, BarChart, ArrowUpRight, Clock, Mail, RefreshCw, Eye } from 'lucide-react';
 import clsx from 'clsx';
 
 const Analytics: React.FC = () => {
