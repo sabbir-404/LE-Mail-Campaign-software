@@ -1155,12 +1155,12 @@ const MailDesign: React.FC = () => {
             <div className="h-full grid grid-cols-1 gap-4 p-4 min-h-0">
               <div className="min-w-0 min-h-0 flex flex-col gap-4">
                 <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb-3">
                     <div>
                       <div className="text-sm font-semibold text-stone-900">Builder Canvas</div>
                       <div className="text-xs text-stone-500">Arrange blocks, then edit each selected section directly below it.</div>
                     </div>
-                    <button onClick={() => setSelectedBlockId(null)} className="text-xs px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-50">Clear selection</button>
+                    <button onClick={() => { console.log('clear-selection'); setSelectedBlockId(null); }} className="text-xs px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-50">Clear selection</button>
                   </div>
                   <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
                     {blocks.map((block, index) => {
@@ -1180,7 +1180,7 @@ const MailDesign: React.FC = () => {
                             next.splice(toIndex, 0, moved);
                             return next;
                           })}
-                          onClick={() => setSelectedBlockId(block.id)}
+                          onClick={() => { console.log('select-block', block.id); setSelectedBlockId(block.id); }}
                           className={clsx('rounded-2xl border p-3 bg-stone-50 cursor-pointer', isSelected ? 'border-orange-300 shadow-sm bg-orange-50' : 'border-stone-200 hover:border-orange-200')}
                         >
                           <div className="flex items-start gap-3">
