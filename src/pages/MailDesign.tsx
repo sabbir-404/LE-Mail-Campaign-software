@@ -157,6 +157,15 @@ const TEMPLATE_LIBRARY: Array<{ key: TemplateKey; title: string; description: st
   { key: 'invitation', title: 'Event Invitation', description: 'Invite customers to a showroom or event.', purpose: 'Event invitation' },
 ];
 
+const isTemplateKey = (value: unknown): value is TemplateKey =>
+  value === 'product-launch' ||
+  value === 'discount-offer' ||
+  value === 'newsletter' ||
+  value === 'festival' ||
+  value === 'new-collection' ||
+  value === 'thank-you' ||
+  value === 'invitation';
+
 const DEFAULT_FORMS: DesignForm = {
   name: 'New Design',
   subject: 'Your next campaign starts here',
@@ -286,6 +295,103 @@ const buildDividerBlock = (overrides: Partial<DividerBlock> = {}): DividerBlock 
   color: '#e2e8f0',
   ...overrides,
 });
+
+const toStringValue = (value: unknown, fallback = '') => (typeof value === 'string' ? value : fallback);
+
+const normalizeLoadedBlocks = (rawBlocks: unknown, templateKey: TemplateKey): Block[] => {
+  if (!Array.isArray(rawBlocks)) return buildDefaultBlocks(templateKey);
+
+  const normalized = rawBlocks
+    .map((raw): Block | null => {
+      if (!raw || typeof raw !== 'object') return null;
+      const block = raw as Record<string, unknown>;
+      const type = block.type;
+      const id = toStringValue(block.id, createId());
+
+      if (type === 'hero') {
+        const layout = block.layout === 'split-left' || block.layout === 'split-right' ? block.layout : 'center';
+        return buildHeroBlock({
+          id,
+          badge: toStringValue(block.badge, 'Featured Update'),
+          title: toStringValue(block.title, 'Big announcement for your audience'),
+          subtitle: toStringValue(block.subtitle, 'Use this section for your most important message.'),
+          description: toStringValue(block.description, ''),
+          ctaText: toStringValue(block.ctaText, 'Learn More'),
+          ctaLink: toStringValue(block.ctaLink, 'https://leadingedge.com.bd'),
+          imageUrl: toStringValue(block.imageUrl, 'https://images.unsplash.com/photo-1493666438817-866a91353ca9?auto=format&fit=crop&w=1200&q=80'),
+          layout,
+        });
+      }
+
+      if (type === 'text') {
+        const align = block.align === 'left' || block.align === 'right' ? block.align : 'center';
+        return buildTextBlock({
+          id,
+          heading: toStringValue(block.heading, 'Section heading'),
+          content: toStringValue(block.content, ''),
+          align,
+        });
+      }
+
+      if (type === 'image') {
+        return buildImageBlock({
+          id,
+          imageUrl: toStringValue(block.imageUrl, 'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80'),
+          alt: toStringValue(block.alt, 'Campaign image'),
+          caption: toStringValue(block.caption, ''),
+          link: toStringValue(block.link, 'https://leadingedge.com.bd'),
+        });
+      }
+
+      if (type === 'button') {
+        const align = block.align === 'left' || block.align === 'right' ? block.align : 'center';
+        return buildButtonBlock({
+          id,
+          text: toStringValue(block.text, 'Explore Now'),
+          link: toStringValue(block.link, 'https://leadingedge.com.bd'),
+          align,
+        });
+      }
+
+      if (type === 'grid') {
+        const columns = block.columns === 3 ? 3 : 2;
+        const fallback = buildGridBlock(columns, { id });
+        const rawItems = Array.isArray(block.items) ? block.items : [];
+        const items = rawItems.slice(0, columns).map((item, index) => {
+          const src = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
+          const base = fallback.items[index] || fallback.items[0];
+          return {
+            title: toStringValue(src.title, base.title),
+            description: toStringValue(src.description, base.description),
+            price: toStringValue(src.price, base.price),
+            imageUrl: toStringValue(src.imageUrl, base.imageUrl),
+            link: toStringValue(src.link, base.link),
+            ctaText: toStringValue(src.ctaText, base.ctaText),
+          };
+        });
+
+        return buildGridBlock(columns, {
+          id,
+          title: toStringValue(block.title, fallback.title),
+          subtitle: toStringValue(block.subtitle, fallback.subtitle),
+          columns,
+          items: items.length ? items : fallback.items,
+        });
+      }
+
+      if (type === 'divider') {
+        return buildDividerBlock({
+          id,
+          color: toStringValue(block.color, '#e2e8f0'),
+        });
+      }
+
+      return null;
+    })
+    .filter((block): block is Block => Boolean(block));
+
+  return normalized.length ? normalized : buildDefaultBlocks(templateKey);
+};
 
 const buildDefaultBlocks = (templateKey: TemplateKey): Block[] => {
   switch (templateKey) {
@@ -729,9 +835,12 @@ const MailDesign: React.FC = () => {
           const parsed = JSON.parse(design.builder_json);
           console.log('[MailDesign] Successfully parsed builder_json');
           
+          const parsedTemplateKey = isTemplateKey(parsed?.formData?.templateKey) ? parsed.formData.templateKey : DEFAULT_FORMS.templateKey;
+
           nextForm = {
             ...DEFAULT_FORMS,
             ...(parsed.formData || {}),
+            templateKey: parsedTemplateKey,
             name: design.name,
             subject: design.subject,
             body_html: design.body_html || DEFAULT_FORMS.body_html,
@@ -739,8 +848,8 @@ const MailDesign: React.FC = () => {
             use_footer: design.use_footer === 1,
             editorMode: 'builder', // Explicitly set builder mode
           };
-          
-          nextBlocks = Array.isArray(parsed.blocks) && parsed.blocks.length ? parsed.blocks : buildDefaultBlocks(nextForm.templateKey);
+
+          nextBlocks = normalizeLoadedBlocks(parsed.blocks, parsedTemplateKey);
           usedMode = 'builder';
         } catch (parseError) {
           console.warn('[MailDesign] Failed to parse builder_json, falling back to legacy:', parseError);
