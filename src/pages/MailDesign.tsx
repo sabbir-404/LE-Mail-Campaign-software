@@ -576,7 +576,28 @@ const MailDesign: React.FC = () => {
   const api = () => (window as any).electronAPI;
 
   const loadDesigns = () => {
-    api()?.getDesigns().then((res: any) => setDesigns(res || []));
+    try {
+      console.log('[MailDesign] Loading designs...');
+      const result = api()?.getDesigns?.();
+      if (result?.then) {
+        result.then((res: any) => {
+          console.log('[MailDesign] Designs loaded:', res?.length || 0);
+          setDesigns(res || []);
+        }).catch((err: any) => {
+          console.error('[MailDesign] Error loading designs:', err);
+          setDesigns([]);
+        });
+      } else if (Array.isArray(result)) {
+        console.log('[MailDesign] Designs loaded (sync):', result.length);
+        setDesigns(result);
+      } else {
+        console.warn('[MailDesign] electronAPI.getDesigns not available');
+        setDesigns([]);
+      }
+    } catch (error) {
+      console.error('[MailDesign] Error in loadDesigns:', error);
+      setDesigns([]);
+    }
   };
 
   useEffect(() => {
@@ -692,36 +713,63 @@ const MailDesign: React.FC = () => {
   };
 
   const handleEdit = (design: any) => {
-    setEditingId(design.id);
-    setShowPreview(false);
-    setFeedback(null);
+    try {
+      console.log('[MailDesign] handleEdit called for design:', design.id);
+      
+      // Always reset preview mode
+      setShowPreview(false);
+      setFeedback(null);
 
-    if (design.builder_json) {
-      try {
-        const parsed = JSON.parse(design.builder_json);
-        const nextForm: DesignForm = {
-          ...DEFAULT_FORMS,
-          ...(parsed.formData || {}),
-          name: design.name,
-          subject: design.subject,
-          body_html: design.body_html || DEFAULT_FORMS.body_html,
-          use_header: design.use_header === 1,
-          use_footer: design.use_footer === 1,
-        };
-        setFormData(nextForm);
-        const nextBlocks = Array.isArray(parsed.blocks) && parsed.blocks.length ? parsed.blocks : buildDefaultBlocks(nextForm.templateKey);
-        setBlocks(nextBlocks);
-        setSelectedBlockId(nextBlocks[0]?.id || null);
-        return;
-      } catch (_) {
-        // Fall back to legacy code mode if the JSON cannot be parsed.
+      let nextForm: DesignForm = { ...DEFAULT_FORMS };
+      let nextBlocks: Block[] = buildDefaultBlocks(DEFAULT_FORMS.templateKey);
+      let usedMode: 'builder' | 'legacy' = 'builder';
+
+      if (design.builder_json) {
+        try {
+          const parsed = JSON.parse(design.builder_json);
+          console.log('[MailDesign] Successfully parsed builder_json');
+          
+          nextForm = {
+            ...DEFAULT_FORMS,
+            ...(parsed.formData || {}),
+            name: design.name,
+            subject: design.subject,
+            body_html: design.body_html || DEFAULT_FORMS.body_html,
+            use_header: design.use_header === 1,
+            use_footer: design.use_footer === 1,
+            editorMode: 'builder', // Explicitly set builder mode
+          };
+          
+          nextBlocks = Array.isArray(parsed.blocks) && parsed.blocks.length ? parsed.blocks : buildDefaultBlocks(nextForm.templateKey);
+          usedMode = 'builder';
+        } catch (parseError) {
+          console.warn('[MailDesign] Failed to parse builder_json, falling back to legacy:', parseError);
+          const legacy = convertLegacyDesignToBuilder(design);
+          nextForm = { ...legacy.form, editorMode: 'builder' }; // Use builder mode for legacy too
+          nextBlocks = legacy.blocks;
+          usedMode = 'legacy';
+        }
+      } else {
+        console.log('[MailDesign] No builder_json, using legacy conversion');
+        const legacy = convertLegacyDesignToBuilder(design);
+        nextForm = { ...legacy.form, editorMode: 'builder' }; // Use builder mode for legacy too
+        nextBlocks = legacy.blocks;
+        usedMode = 'legacy';
       }
-    }
 
-    const legacy = convertLegacyDesignToBuilder(design);
-    setFormData({ ...legacy.form, editorMode: 'code' });
-    setBlocks(legacy.blocks);
-    setSelectedBlockId(legacy.blocks[0]?.id || null);
+      console.log('[MailDesign] Setting state - mode:', usedMode, 'blocks:', nextBlocks.length, 'formData.editorMode:', nextForm.editorMode);
+      
+      // Set all state at once to reduce potential race conditions
+      setEditingId(design.id);
+      setFormData(nextForm);
+      setBlocks(nextBlocks);
+      setSelectedBlockId(nextBlocks[0]?.id || null);
+      
+      console.log('[MailDesign] State updated successfully');
+    } catch (error) {
+      console.error('[MailDesign] Unexpected error in handleEdit:', error);
+      setFeedback({ type: 'error', message: 'Failed to load design. Please try again.' });
+    }
   };
 
   const handleDelete = (id: number) => {
@@ -740,13 +788,20 @@ const MailDesign: React.FC = () => {
   };
 
   const handleNew = () => {
-    const preset = applyTemplatePreset('product-launch');
-    setEditingId(null);
-    setFormData(preset.form);
-    setBlocks(preset.blocks);
-    setSelectedBlockId(preset.blocks[0]?.id || null);
-    setShowPreview(false);
-    setFeedback(null);
+    try {
+      console.log('[MailDesign] Creating new design');
+      const preset = applyTemplatePreset('product-launch');
+      setEditingId(null);
+      setShowPreview(false);
+      setFeedback(null);
+      setFormData({ ...preset.form, editorMode: 'builder' });
+      setBlocks(preset.blocks);
+      setSelectedBlockId(preset.blocks[0]?.id || null);
+      console.log('[MailDesign] New design created successfully');
+    } catch (error) {
+      console.error('[MailDesign] Error creating new design:', error);
+      setFeedback({ type: 'error', message: 'Failed to create new design.' });
+    }
   };
 
   const handleSendTest = async () => {
@@ -1180,7 +1235,7 @@ const MailDesign: React.FC = () => {
                             next.splice(toIndex, 0, moved);
                             return next;
                           })}
-                          onClick={() => { console.log('select-block', block.id); setSelectedBlockId(block.id); }}
+                          onClick={() => { console.log('[MailDesign] Block clicked:', block.id); setSelectedBlockId(block.id); }}
                           className={clsx('rounded-2xl border p-3 bg-stone-50 cursor-pointer', isSelected ? 'border-orange-300 shadow-sm bg-orange-50' : 'border-stone-200 hover:border-orange-200')}
                         >
                           <div className="flex items-start gap-3">
