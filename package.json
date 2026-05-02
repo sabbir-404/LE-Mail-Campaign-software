@@ -1,6 +1,6 @@
 {
   "name": "le-mail-campaign-software",
-  "version": "1.0.11",
+  "version": "1.1.0",
   "description": "LE Mail Campaign software to send bulk emails via SMTP",
   "main": "dist-electron/main.js",
   "author": "Leading Edge",

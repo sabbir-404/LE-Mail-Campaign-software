@@ -965,6 +965,24 @@ const MailDesign: React.FC = () => {
             <label className="text-xs font-semibold text-stone-600 mb-1 block">Short Description</label>
             <textarea value={block.description} onChange={event => updateBlock(block.id, current => ({ ...(current as HeroBlock), description: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm min-h-24" />
           </div>
+          <div>
+            <label className="text-xs font-semibold text-stone-600 mb-1 block">Hero Image</label>
+            <div className="flex gap-2 mb-2">
+              <input
+                value={block.imageUrl}
+                onChange={event => updateBlock(block.id, current => ({ ...(current as HeroBlock), imageUrl: event.target.value }))}
+                className="flex-1 border border-stone-300 rounded-lg px-3 py-2 text-sm"
+                placeholder="Paste image URL..."
+              />
+              <label className="px-3 py-2 text-xs rounded-lg bg-orange-50 border border-orange-200 cursor-pointer hover:bg-orange-100 transition-colors flex items-center gap-1.5 shrink-0 text-orange-700 font-medium">
+                <Upload size={13} /> Upload
+                <input type="file" accept="image/*" className="hidden" onChange={event => handleFileUpload(event, dataUrl => updateBlock(block.id, current => ({ ...(current as HeroBlock), imageUrl: dataUrl })))} />
+              </label>
+            </div>
+            {block.imageUrl && (
+              <img src={block.imageUrl} alt="preview" className="w-full h-24 object-cover rounded-lg border border-stone-200" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+            )}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-stone-600 mb-1 block">Button Text</label>
@@ -1002,15 +1020,33 @@ const MailDesign: React.FC = () => {
       {block.type === 'image' && (
         <>
           <div>
-            <label className="text-xs font-semibold text-stone-600 mb-1 block">Image URL</label>
-            <input value={block.imageUrl} onChange={event => updateBlock(block.id, current => ({ ...(current as ImageBlock), imageUrl: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
+            <label className="text-xs font-semibold text-stone-600 mb-1 block">Image</label>
+            <div className="flex gap-2 mb-2">
+              <input
+                value={block.imageUrl}
+                onChange={event => updateBlock(block.id, current => ({ ...(current as ImageBlock), imageUrl: event.target.value }))}
+                className="flex-1 border border-stone-300 rounded-lg px-3 py-2 text-sm"
+                placeholder="Paste image URL..."
+              />
+              <label className="px-3 py-2 text-xs rounded-lg bg-orange-50 border border-orange-200 cursor-pointer hover:bg-orange-100 transition-colors flex items-center gap-1.5 shrink-0 text-orange-700 font-medium">
+                <Upload size={13} /> Upload
+                <input type="file" accept="image/*" className="hidden" onChange={event => handleFileUpload(event, dataUrl => updateBlock(block.id, current => ({ ...(current as ImageBlock), imageUrl: dataUrl })))} />
+              </label>
+            </div>
+            {block.imageUrl && (
+              <img src={block.imageUrl} alt="preview" className="w-full h-32 object-cover rounded-lg border border-stone-200" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+            )}
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-stone-600 mb-1 block">Alt Text</label>
+            <input value={block.alt} onChange={event => updateBlock(block.id, current => ({ ...(current as ImageBlock), alt: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
           </div>
           <div>
             <label className="text-xs font-semibold text-stone-600 mb-1 block">Caption</label>
             <textarea value={block.caption} onChange={event => updateBlock(block.id, current => ({ ...(current as ImageBlock), caption: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm min-h-20" />
           </div>
           <div>
-            <label className="text-xs font-semibold text-stone-600 mb-1 block">Link</label>
+            <label className="text-xs font-semibold text-stone-600 mb-1 block">Click-through Link</label>
             <input value={block.link} onChange={event => updateBlock(block.id, current => ({ ...(current as ImageBlock), link: event.target.value }))} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
           </div>
         </>
@@ -1057,6 +1093,42 @@ const MailDesign: React.FC = () => {
                 next.items[itemIndex] = { ...next.items[itemIndex], description: event.target.value };
                 return next;
               })} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm min-h-20" placeholder="Description" />
+              <input value={item.price} onChange={event => updateBlock(block.id, current => {
+                const next = { ...(current as GridBlock) };
+                next.items[itemIndex] = { ...next.items[itemIndex], price: event.target.value };
+                return next;
+              })} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" placeholder="Price (e.g. Tk 45,000)" />
+              <div>
+                <label className="text-xs text-stone-500 mb-1 block">Item Image</label>
+                <div className="flex gap-2 mb-1">
+                  <input
+                    value={item.imageUrl}
+                    onChange={event => updateBlock(block.id, current => {
+                      const next = { ...(current as GridBlock) };
+                      next.items[itemIndex] = { ...next.items[itemIndex], imageUrl: event.target.value };
+                      return next;
+                    })}
+                    className="flex-1 border border-stone-300 rounded-lg px-3 py-2 text-sm"
+                    placeholder="Paste image URL..."
+                  />
+                  <label className="px-3 py-2 text-xs rounded-lg bg-orange-50 border border-orange-200 cursor-pointer hover:bg-orange-100 transition-colors flex items-center gap-1.5 shrink-0 text-orange-700 font-medium">
+                    <Upload size={13} /> Upload
+                    <input type="file" accept="image/*" className="hidden" onChange={event => handleFileUpload(event, dataUrl => updateBlock(block.id, current => {
+                      const next = { ...(current as GridBlock) };
+                      next.items[itemIndex] = { ...next.items[itemIndex], imageUrl: dataUrl };
+                      return next;
+                    }))} />
+                  </label>
+                </div>
+                {item.imageUrl && (
+                  <img src={item.imageUrl} alt="preview" className="w-full h-20 object-cover rounded-lg border border-stone-200" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                )}
+              </div>
+              <input value={item.link} onChange={event => updateBlock(block.id, current => {
+                const next = { ...(current as GridBlock) };
+                next.items[itemIndex] = { ...next.items[itemIndex], link: event.target.value };
+                return next;
+              })} className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" placeholder="Link URL" />
             </div>
           ))}
         </>
@@ -1376,26 +1448,32 @@ const MailDesign: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm flex-1 min-h-0">
-                  <div className="px-4 py-3 border-b border-stone-100 bg-stone-50 flex items-center justify-between">
+                <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm flex flex-col" style={{ minHeight: '520px' }}>
+                  <div className="px-4 py-3 border-b border-stone-100 bg-stone-50 flex items-center justify-between shrink-0">
                     <div>
-                      <div className="text-sm font-semibold text-stone-900">Email Body Preview</div>
-                      <div className="text-xs text-stone-500">Preview desktop/mobile and Light, Dark, or Auto phone mode.</div>
+                      <div className="text-sm font-semibold text-stone-900">Email Preview</div>
+                      <div className="text-xs text-stone-500">Live render of your email design.</div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap justify-end">
-                      <button onClick={() => setPreviewMode('desktop')} className={clsx('text-xs px-3 py-1.5 rounded-lg border', previewMode === 'desktop' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-white text-stone-600 border-stone-200')}>Desktop</button>
-                      <button onClick={() => setPreviewMode('mobile')} className={clsx('text-xs px-3 py-1.5 rounded-lg border', previewMode === 'mobile' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-white text-stone-600 border-stone-200')}>Mobile</button>
+                      <button onClick={() => setPreviewMode('desktop')} className={clsx('text-xs px-3 py-1.5 rounded-lg border flex items-center gap-1', previewMode === 'desktop' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-white text-stone-600 border-stone-200')}><Monitor size={12} />Desktop</button>
+                      <button onClick={() => setPreviewMode('mobile')} className={clsx('text-xs px-3 py-1.5 rounded-lg border flex items-center gap-1', previewMode === 'mobile' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-white text-stone-600 border-stone-200')}><Smartphone size={12} />Mobile</button>
                       <select value={previewTheme} onChange={event => setPreviewTheme(event.target.value as PreviewTheme)} className="text-xs px-2.5 py-1.5 rounded-lg border border-stone-200 bg-white text-stone-700">
                         <option value="light">Light Mode</option>
                         <option value="dark">Dark Mode</option>
-                        <option value="auto">Auto (Phone System)</option>
+                        <option value="auto">Auto (Phone)</option>
                       </select>
-                      <button onClick={() => setShowPreview(true)} className="text-xs px-3 py-1.5 rounded-lg bg-orange-100 text-orange-700 border border-orange-200 hover:bg-orange-200">Open Preview</button>
+                      <button onClick={() => setShowPreview(true)} className="text-xs px-3 py-1.5 rounded-lg bg-orange-500 text-white hover:bg-orange-600 font-medium">Full Preview</button>
                     </div>
                   </div>
-                  <div className="p-4 min-h-[280px] bg-stone-50 flex items-center justify-center">
-                    <div className={clsx('w-full', previewMode === 'mobile' && 'max-w-[380px] h-[640px] border-[8px] border-stone-800 rounded-[28px] overflow-hidden bg-white')}>
-                      <iframe srcDoc={themedPreviewHtml} className={clsx('w-full border border-stone-200 rounded-xl bg-white', previewMode === 'mobile' ? 'h-full border-0 rounded-none' : 'h-[360px]')} sandbox="allow-same-origin" title="Inline Email Preview" />
+                  <div className="flex-1 bg-stone-100 flex items-start justify-center p-4 overflow-y-auto" style={{ minHeight: '460px' }}>
+                    <div className={clsx('w-full', previewMode === 'mobile' ? 'max-w-[390px] border-[10px] border-stone-800 rounded-[32px] overflow-hidden bg-white shadow-2xl' : 'max-w-[760px]')}>
+                      <iframe
+                        srcDoc={themedPreviewHtml}
+                        className={clsx('w-full border-0 bg-white block', previewMode === 'mobile' ? 'h-[700px] rounded-none' : 'rounded-xl border border-stone-200')}
+                        style={{ height: previewMode === 'desktop' ? 'min(80vh, 900px)' : '700px' }}
+                        sandbox="allow-same-origin"
+                        title="Inline Email Preview"
+                      />
                     </div>
                   </div>
                 </div>
